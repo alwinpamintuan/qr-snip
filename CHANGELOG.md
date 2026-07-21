@@ -4,6 +4,8 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-22
+
 ### Added
 
 - Visible-tab QR selection through a frozen snipping interface
@@ -25,4 +27,5 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Screenshots and payloads remain in memory and are not uploaded or persisted
 - Generated manifests are checked for least-privilege permissions and exposed runtime surfaces
 
-[Unreleased]: https://github.com/alwinpamintuan/qr-snip/commits/main
+[Unreleased]: https://github.com/alwinpamintuan/qr-snip/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/alwinpamintuan/qr-snip/releases/tag/v0.1.0
