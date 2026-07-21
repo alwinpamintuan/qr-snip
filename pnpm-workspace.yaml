@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  spawn-sync: false
+nodeLinker: hoisted
+onlyBuiltDependencies:
+  - esbuild
