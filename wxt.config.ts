@@ -1,14 +1,26 @@
 import { defineConfig } from 'wxt';
+import packageMetadata from './package.json';
 
 export default defineConfig({
   manifest: ({ browser }) => ({
     name: 'QR Snip',
     short_name: 'QR Snip',
     description: 'Select and scan a QR code anywhere in the visible browser tab.',
-    version: '0.1.0',
+    version: packageMetadata.version,
     permissions: ['activeTab', 'scripting'],
+    icons: {
+      16: 'icons/qr-snip-16.png',
+      32: 'icons/qr-snip-32.png',
+      48: 'icons/qr-snip-48.png',
+      96: 'icons/qr-snip-96.png',
+      128: 'icons/qr-snip-128.png',
+    },
     action: {
       default_title: 'Scan a QR code',
+      default_icon: {
+        16: 'icons/qr-snip-toolbar-16.png',
+        32: 'icons/qr-snip-toolbar-32.png',
+      },
     },
     commands: {
       _execute_action: {

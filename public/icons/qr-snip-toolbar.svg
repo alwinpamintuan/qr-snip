@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">QR Snip toolbar icon</title>
+  <desc id="desc">The QR Snip brand mark optically sized for a browser toolbar.</desc>
+  <path fill="#593a6d" d="M32 0h48a48 48 0 0 1 48 48v48a32 32 0 0 1-32 32H48A48 48 0 0 1 0 80V32A32 32 0 0 1 32 0Z"/>
+  <g transform="translate(16 16) scale(4)" fill="#f0dbff">
+    <path d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-3v-5Zm-5 5h5v3h-5v-3Zm6 1h2v2h-2v-2Z"/>
+  </g>
+</svg>

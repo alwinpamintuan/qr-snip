@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">QR Snip</title>
+  <desc id="desc">The QR code symbol used in the QR Snip selection screen.</desc>
+  <path fill="#593a6d" d="M49 16h15a48 48 0 0 1 48 48v15a33 33 0 0 1-33 33H64a48 48 0 0 1-48-48V49a33 33 0 0 1 33-33Z"/>
+  <g transform="translate(34 34) scale(2.5)" fill="#f0dbff">
+    <path d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-3v-5Zm-5 5h5v3h-5v-3Zm6 1h2v2h-2v-2Z"/>
+  </g>
+</svg>
