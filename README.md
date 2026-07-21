@@ -50,7 +50,7 @@ For the best result:
 - Prefer strong light/dark luminance contrast.
 - Use a small centered logo and high error correction when generating branded codes.
 
-The decoder is [`jsQR`](https://github.com/cozmo/jsQR), configured to try normal and inverted luminance. The release gate currently uses 145 positive and 30 negative deterministic fixtures, requires at least a 90% positive decode rate, and permits no false positives in the negative corpus. The measured scope is recorded in [Phase 1 validation](docs/PHASE1_VALIDATION.md); fixture metadata lives in [the corpus manifest](tests/fixtures/qr/manifest.json).
+The decoder is [`jsQR`](https://github.com/cozmo/jsQR), configured to try normal and inverted luminance. The release gate currently uses 145 positive and 30 negative deterministic fixtures, requires at least a 90% positive decode rate, and permits no false positives in the negative corpus. The measured scope and outstanding manual checks are recorded in the [QA plan](docs/QA.md#current-validation-status); fixture metadata lives in [the corpus manifest](tests/fixtures/qr/manifest.json).
 
 ## Payload handling
 
@@ -197,7 +197,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and c
 - [Product specification](docs/PRODUCT_SPEC.md): current behavior, interaction states, requirements, and success measures
 - [Architecture](docs/ARCHITECTURE.md): runtime boundaries, data flow, permissions, and extension points
 - [Security model](docs/SECURITY.md): trust boundaries, preview policy, threat analysis, and release checks
-- [Quality assurance](docs/QA.md): automated gates, browser matrix, accessibility, performance, and release testing
+- [Quality assurance](docs/QA.md): current validation evidence, automated gates, browser matrix, accessibility, performance, and release testing
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md): ordered work toward the 1.0 release
 - [Post-1.0 roadmap](docs/ROADMAP.md): candidate styled-QR and barcode capabilities
-- [Phase 1 validation](docs/PHASE1_VALIDATION.md): implemented hardening evidence and remaining manual checks

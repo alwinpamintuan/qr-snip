@@ -7,7 +7,7 @@ This is the ordered delivery plan from the working application to a store-ready 
 | Workstream | Status | Evidence or next gate |
 | --- | --- | --- |
 | Current application baseline | Implemented | Unit tests and Chromium/Firefox production builds |
-| Phase 1 reliability hardening | Implementation complete; manual validation open | [PHASE1_VALIDATION.md](PHASE1_VALIDATION.md) |
+| Phase 1 reliability hardening | Implementation complete; manual validation open | [QA.md](QA.md#current-validation-status) |
 | Phase 2 browser coverage, design system, keyboard selection, i18n | Planned | Complete each subsection's acceptance criteria |
 | Phase 3 options, interpreters, packaging, release automation | Planned | Complete each subsection's acceptance criteria |
 | Post-1.0 compatibility and barcode work | Candidate features | [ROADMAP.md](ROADMAP.md) promotion checklist |
@@ -41,7 +41,7 @@ Apply these rules to every phase:
 
 ## Phase 1 — reliability hardening
 
-Status: implementation complete; manual performance, browser, and reviewer checks remain recorded in [PHASE1_VALIDATION.md](PHASE1_VALIDATION.md).
+Status: implementation complete; manual performance, browser, and reviewer checks remain recorded in [QA.md](QA.md#current-validation-status).
 
 ### 1.1 Decoder fixture corpus
 

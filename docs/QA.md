@@ -23,6 +23,30 @@ The manifest assertion requires exactly `activeTab` and `scripting`, no host per
 
 Browser end-to-end automation, bundle-size budgets, archive inspection, dependency review, SBOM generation, and store submission checks are tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) and should be added to the required gate when implemented.
 
+## Current validation status
+
+The repository currently provides reproducible automated evidence for:
+
+- 145 positive and 30 negative deterministic QR fixtures;
+- QR versions 1, 5, 10, 20, and 40 with L, M, Q, and H error correction;
+- normal, inverted, colored, 90° rotated, resampled, blurred, and partially occluded symbols;
+- 1080p, 1440p, 4K, and 2× device-scale screen composites with explicit crop metadata;
+- a corpus gate of at least 90% exact positive decodes and zero negative-corpus false positives;
+- protocol rejection, Unicode edge whitespace, control characters, private destinations, punycode, credentials, unusual ports, display truncation, and runtime-message guards;
+- successful Chromium and Firefox MV3 builds with only `activeTab` and `scripting`; and
+- inline decoder-worker packaging with transferable RGBA buffers and no exposed worker asset.
+
+The following release evidence still requires a real browser and representative hardware:
+
+- profile 4K selections and confirm page main-thread tasks stay below 100 ms;
+- compare heap after the first and fifth repeated scan, targeting no more than 10% post-cleanup growth;
+- cancel an active decode with Escape in current Chrome, Edge, Firefox, and Firefox ESR;
+- invoke QR Snip twice rapidly and confirm only the latest overlay remains usable;
+- exercise restricted-page recovery messages on browser-owned pages and extension stores; and
+- complete security-reviewer sign-off for the threat table and residual risks in [SECURITY.md](SECURITY.md).
+
+Do not describe browser coverage, performance, memory behavior, or security review as complete until the result is recorded with browser and operating-system versions, commit SHA, reviewer, and date.
+
 ## Test ownership
 
 | Concern | Primary automated evidence |
