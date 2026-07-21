@@ -1,6 +1,16 @@
 # Detailed implementation plan
 
-This is the ordered handoff plan from the current functional foundation to a store-ready release. Each task names the implementation approach and acceptance criteria so a developer can pick it up without re-deriving the architecture.
+This is the ordered delivery plan from the working application to a store-ready 1.0 release. Each task names the implementation approach and acceptance criteria so a contributor can pick it up without re-deriving product, architecture, or security decisions.
+
+## Status summary
+
+| Workstream | Status | Evidence or next gate |
+| --- | --- | --- |
+| Current application baseline | Implemented | Unit tests and Chromium/Firefox production builds |
+| Phase 1 reliability hardening | Implementation complete; manual validation open | [PHASE1_VALIDATION.md](PHASE1_VALIDATION.md) |
+| Phase 2 browser coverage, design system, keyboard selection, i18n | Planned | Complete each subsection's acceptance criteria |
+| Phase 3 options, interpreters, packaging, release automation | Planned | Complete each subsection's acceptance criteria |
+| Post-1.0 compatibility and barcode work | Candidate features | [ROADMAP.md](ROADMAP.md) promotion checklist |
 
 ## Current baseline (completed)
 
@@ -8,12 +18,12 @@ This is the ordered handoff plan from the current functional foundation to a sto
 - Explicit toolbar/shortcut activation under `activeTab`
 - Runtime-only content script injection
 - Frozen-screen drag selector with zoom/DPI-aware crop mapping
-- Local `jsQR` decoder with inverted-code support and a 2× small-code retry
+- Worker-based local `jsQR` decoder with inverted-code support, bounded large-image retry, and a 2× small-code retry
 - Preview-first result card; no automatic navigation
 - Protocol allow list enforced in content and background
 - Link-risk assessment rendered directly in suspicious-destination previews
 - Material 3 Expressive light/dark/high-contrast/reduced-motion UI
-- Pure unit tests for geometry, classification, and link warnings
+- Pure tests for geometry, classification, link warnings, messages, RGBA constraints, and the fixture corpus
 - Product, architecture, security, and QA documentation
 
 ## Engineering principles
@@ -24,14 +34,14 @@ Apply these rules to every phase:
 - **Open/closed:** add decoders or result interpreters behind interfaces/registries rather than expanding one switch-heavy controller.
 - **Liskov substitution:** test adapters against shared contracts; a replacement decoder must preserve outcome semantics.
 - **Interface segregation:** pass narrow callbacks and data types, not the browser API or a god-object service.
-- **Dependency inversion:** application orchestration depends on `SelectionDecoder` and view contracts; privileged APIs stay at entrypoints/adapters.
+- **Dependency inversion:** application orchestration depends on the narrow `QrDecoder` contract; privileged APIs stay at entrypoints/adapters.
 - **DRY:** security validation has one shared implementation, design values use tokens, and repeated test cases use fixtures/tables.
 - **Self-documenting code:** prefer exact domain names (`snapshotDimensions`, `requiresConfirmation`, `toPixelCrop`), discriminated unions, small functions, and explicit return types. Comments explain non-obvious constraints or tradeoffs, not syntax.
 - **No speculative abstraction:** extract a reusable layer only when it expresses a real boundary or removes proven duplication.
 
-## Phase 1 — harden the MVP
+## Phase 1 — reliability hardening
 
-Target: internal alpha.
+Status: implementation complete; manual performance, browser, and reviewer checks remain recorded in [PHASE1_VALIDATION.md](PHASE1_VALIDATION.md).
 
 ### 1.1 Decoder fixture corpus
 
@@ -179,7 +189,7 @@ Target: public beta.
 Implementation:
 
 1. Add an extension-owned options page; do not put settings in arbitrary host pages.
-2. Limit MVP settings to proven needs: theme override, close-after-copy, and decoder diagnostics opt-in.
+2. Limit initial settings to proven needs: theme override, close-after-copy, and decoder diagnostics opt-in.
 3. Store only settings through `storage.local`; request the permission only when this feature ships.
 4. Add concise first-run education about activation, privacy, link previews, and restricted pages.
 5. Avoid opening onboarding on every update.
@@ -239,7 +249,7 @@ Do not add remote reputation lookup by default. If proposed, specify provider, d
 
 ## Definition of done for 1.0
 
-- Product requirements FR-01 through FR-10 pass on the supported browser matrix.
+- Product requirements FR-01 through FR-12 pass on the supported browser matrix.
 - QR fixture success and false-positive thresholds are met.
 - Pointer and keyboard workflows pass accessibility review.
 - Security assessment has no unresolved critical/high issue.

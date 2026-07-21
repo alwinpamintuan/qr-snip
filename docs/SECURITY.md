@@ -21,7 +21,7 @@ Only `activeTab` and `scripting` are declared. Firefox additionally declares the
 
 ### Local-only processing
 
-The browser generates the screenshot and `jsQR` processes selected RGBA pixels locally. Product runtime code makes no network request. Screenshots and decoded payloads are not persisted. Closing the overlay removes DOM nodes and releases application references.
+The browser generates the screenshot, the content script extracts only the bounded selected crop, and an inline worker runs `jsQR` over the transferred RGBA buffer. Product runtime code makes no network request. Screenshots and decoded payloads are not persisted. Closing the overlay aborts decoding, terminates the worker, removes DOM nodes, and releases screenshot, canvas, and application references.
 
 ### Safe rendering
 
@@ -62,11 +62,11 @@ These heuristics do not claim to detect phishing. They add understandable contex
 | Internationalized-domain homograph | Credential theft | Punycode warning and exact destination preview | Consider showing both Unicode and ASCII domain forms with a vetted library. |
 | Host page imitates QR Snip | User confusion | QR Snip asks for no credentials and keeps a consistent toolbar-initiated flow | Page overlays cannot be made impossible. Store copy should tell users the extension never asks them to sign in. |
 | Host page interferes with overlay | Incorrect selection or spoofing | Isolated content world, closed Shadow Root, frozen captured image, maximum z-index | Browser/page accessibility layers may still conflict; test hostile CSS/DOM mutation fixtures. |
-| Screenshot contains sensitive data | Privacy exposure | In-memory only; no logs/storage/network; explicit activation | Other extensions or a compromised browser are outside this boundary. Minimize lifetime and consider worker transfer after measurement. |
-| Oversized 4K/high-DPI image causes memory pressure | Tab instability | Visible viewport only; selected-crop decode | Add dimension/memory budgets and worker-based decoding before release. |
+| Screenshot contains sensitive data | Privacy exposure | In-memory only; no logs/storage/network; explicit activation; selected RGBA buffer transferred to a worker | Other extensions or a compromised browser are outside this boundary. Continue profiling data lifetime and heap cleanup. |
+| Oversized 4K/high-DPI image causes memory pressure | Tab instability | Visible viewport only; selected-crop canvas; 4,096-dimension and 4,000,000-pixel decode limits; worker cancellation | The full captured PNG remains in memory while the overlay is open. Profile representative high-DPI screens before each major release. |
 | Message spoofing by another extension/page | Unauthorized navigation | WebExtension runtime messaging is isolated; message shape and protocol are checked | If external messaging is ever added, authenticate sender and keep it disabled by default. |
 | Dependency compromise | Build/runtime compromise | Small dependency set, lockfile, review gates | Enable automated dependency review, pin CI runtime, inspect lockfile changes, and produce SBOM/provenance. |
-| Clipboard fallback leaks value into page | Sensitive payload exposure | Temporary hidden textarea, immediately removed | Prefer Clipboard API; test that page MutationObservers cannot capture isolated-root fallback. Current fallback is in page DOM and should move inside the closed root or be removed after support review. |
+| Clipboard fallback exposes a value | Sensitive payload exposure | Prefer Clipboard API; fallback textarea is appended inside the closed Shadow Root and immediately removed | Browser or accessibility tooling may still observe clipboard operations. Keep copying user-triggered and never copy automatically. |
 
 ## Important design prohibitions
 
@@ -86,12 +86,12 @@ Developers must not:
 
 Before every store release:
 
-1. Inspect the generated manifests for permissions and externally connectable endpoints.
+1. Run `pnpm check` and inspect both generated manifests for permissions, content scripts, web-accessible resources, and externally connectable endpoints.
 2. Search runtime bundles for `fetch`, XHR, WebSocket, analytics SDKs, and remote URLs.
 3. Fuzz result classification with mixed case, whitespace, control characters, long inputs, encoded URLs, Unicode domains, IPv4 variants, IPv6, and malformed mail/tel values.
 4. Confirm every navigation passes through `isAllowedOpenUrl` in the background.
 5. Confirm no code path opens a result during decode or initial preview render.
-6. Run dependency audit/review and inspect every lockfile change.
+6. Review dependencies and inspect every lockfile change; record why each runtime dependency is necessary.
 7. Test restricted browser pages and confirm errors disclose no page data.
 8. Verify source maps and logs do not embed screenshots or fixture secrets.
 9. Re-run content-security-policy and store-policy checks for both packages.
@@ -99,4 +99,6 @@ Before every store release:
 
 ## Reporting vulnerabilities
 
-Before public release, replace this section with a monitored security contact or a repository security-advisory URL. Reports should include the affected version, browser, reproduction steps, and impact. Do not ask reporters to attach sensitive real-world screenshots; provide synthetic QR fixtures.
+Use the repository host's private security-advisory channel when available. If no private channel is published, request a private contact without disclosing exploit details or decoded real-world data in a public issue.
+
+Reports should include the affected version or commit, browser and operating-system versions, synthetic reproduction steps, impact, and whether the behavior requires explicit user activation. Do not attach sensitive screenshots or payloads; reproduce the issue with a synthetic QR fixture whenever possible.

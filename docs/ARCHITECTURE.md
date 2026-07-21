@@ -1,19 +1,47 @@
 # Architecture
 
+This document describes the implemented architecture and the constraints contributors must preserve. Product behavior is defined in [PRODUCT_SPEC.md](PRODUCT_SPEC.md); security invariants are defined in [SECURITY.md](SECURITY.md).
+
 ## 1. Technology decisions
 
 | Area | Choice | Reason |
 | --- | --- | --- |
-| Extension framework | WXT + TypeScript | Generates browser-specific manifests/bundles while retaining direct WebExtension APIs |
-| Manifest | MV3 for Chromium and Firefox | One security model and current store direction |
-| UI | Vanilla DOM in a closed Shadow Root | Small bundle, page-style isolation, no framework lifecycle inside arbitrary sites |
-| Decoder | `jsQR` | Mature local QR decoder; avoids the limited-availability `BarcodeDetector` API |
-| Tests | Vitest | Fast TypeScript unit tests for pure core logic |
-| Package manager | pnpm | Deterministic lockfile and efficient local installs |
+| Extension framework | WXT + TypeScript | Produces browser-specific manifests and bundles while retaining direct WebExtension APIs |
+| Manifest | MV3 for Chromium and Firefox | Keeps one current permission and service-worker model across supported browsers |
+| UI | Vanilla DOM in a closed Shadow Root | Keeps the injected bundle small and isolates controls from arbitrary page styles |
+| Decoder | `jsQR` in an inline Web Worker | Performs local decoding off the page's main thread without exposing a separate worker asset |
+| Tests | Vitest | Runs fast tests against pure TypeScript and RGBA decoder modules |
+| Package manager | pnpm | Provides a deterministic lockfile and efficient local installation |
 
-Do not introduce React or another UI runtime only for the overlay. Reconsider only if options/onboarding surfaces grow enough to justify it; those extension pages can use a framework without forcing it into the content bundle.
+Do not introduce a UI framework only for the overlay. An extension-owned options or onboarding page can make an independent framework decision if its complexity justifies the additional runtime and maintenance cost.
 
-## 2. Runtime boundaries
+Do not replace the decoder merely to expand a feature list. Any decoder change needs corpus evidence, false-positive analysis, bundle and memory measurements, browser parity, and a dependency-security review.
+
+## 2. Dependency direction
+
+The runtime is divided by responsibility rather than browser surface alone:
+
+```text
+entrypoints/        Browser composition and privileged API adapters
+    ↓
+application/        Scan workflow and use-case sequencing
+    ↓
+core/ + security/   Pure policies, geometry, message guards, and decode contracts
+    ↓
+ui/ + workers/      Presentation/gesture adapter and CPU-bound decoder adapter
+```
+
+Important dependency rules:
+
+- Core geometry, payload classification, message guards, and link assessment do not call WebExtension APIs.
+- The background entrypoint is the only component allowed to capture a tab, inject code, or create a destination tab.
+- The view renders state but does not decide whether a destination is allowed.
+- The application orchestrates selection and results but delegates pixel decoding through `QrDecoder`.
+- The worker receives only bounded RGBA pixels and returns a payload or typed local failure.
+
+These boundaries express SOLID principles without creating generic layers that do not map to a real security, test, or runtime boundary.
+
+## 3. Runtime flow
 
 ```mermaid
 sequenceDiagram
@@ -22,123 +50,181 @@ sequenceDiagram
     participant BG as Background worker
     participant API as WebExtension APIs
     participant CS as Snipper content script
-    participant QR as jsQR (local)
+    participant DW as Inline decoder worker
+    participant QR as jsQR
 
     User->>Action: Click or shortcut
-    Action->>BG: onClicked(tab)
+    Action->>BG: action.onClicked(tab)
     BG->>API: captureVisibleTab(windowId)
     API-->>BG: PNG data URL
     BG->>API: scripting.executeScript(tabId)
-    BG->>CS: START_CAPTURE + PNG
+    BG->>CS: START_CAPTURE(invocationId, PNG)
+    CS-->>BG: Invocation acknowledgement
     User->>CS: Drag selection
-    CS->>QR: Selected RGBA pixels
-    QR-->>CS: Payload or not found
-    CS-->>User: Result card
-    opt Allow-listed open action
+    CS->>CS: Map CSS rectangle to image crop
+    CS->>CS: Draw bounded crop and read RGBA
+    CS->>DW: Transfer RGBA ArrayBuffer
+    DW->>QR: Decode normal/inverted pixels
+    QR-->>DW: Payload or not found
+    DW-->>CS: Typed decode result
+    CS-->>User: Preview and available actions
+    opt Explicit allow-listed Open
         User->>CS: Open
-        CS->>BG: OPEN_RESULT + URL
-        BG->>BG: Validate protocol again
+        CS->>BG: OPEN_RESULT(url)
+        BG->>BG: Validate message and protocol again
         BG->>API: tabs.create(url)
     end
 ```
 
+The screenshot is captured before the overlay is injected. This prevents QR Snip's own interface from appearing in the image and freezes animation, sticky elements, video frames, and page mutations for the duration of the selection workflow.
+
+## 4. Component responsibilities
+
 ### Background worker
 
-`entrypoints/background.ts` is the only privileged coordinator. It:
+`entrypoints/background.ts` is the privileged coordinator. It:
 
-- handles the action click;
+- handles toolbar and shortcut activation;
+- creates an invocation ID and suppresses stale overlapping invocations;
+- rejects known browser-owned and extension-store URLs;
 - captures the current visible tab under temporary `activeTab` access;
+- verifies that the tab has not navigated between capture and injection;
 - injects the runtime snipper bundle with `scripting`;
-- sends the screenshot to the tab;
-- validates any requested external URL a second time; and
-- provides a short action-badge error on restricted pages.
+- sends the screenshot and invocation ID to the content script;
+- validates requested external URLs a second time; and
+- shows a short, categorized toolbar-badge recovery message when activation fails.
 
-It must never persist or log screenshot data or decoded values. Keep event listeners inside `defineBackground` so WXT can generate an MV3 service worker/event page correctly.
+It must never persist or log a URL, tab title, screenshot, decoded payload, or page-derived value. Keep event listeners inside `defineBackground` so WXT can generate the MV3 service-worker/event-page form appropriate to each browser.
 
-### Content script
+### Content-script composition root
 
-`entrypoints/snipper.content.ts` is not declared for every URL. WXT builds it as a runtime entrypoint and the background injects it only after a user action. A global controller guard prevents duplicate message listeners when the bundle is injected again into the same document.
+`entrypoints/snipper.content.ts` uses `registration: 'runtime'`; it is not declared on every URL. The background injects it only after an explicit user action.
 
-The overlay uses a closed Shadow Root. The host occupies the viewport at the maximum practical z-index. A frozen screenshot is displayed and dimmed; the selection restores the same screenshot in full brightness. This prevents page movement, animation, sticky elements, or video playback from changing what the user selected after capture.
+A guarded global `SnipperApplication` instance prevents duplicate message listeners when the same bundle is injected again into a document. Incoming `START_CAPTURE` messages pass a runtime shape guard before changing application state.
 
-### Core modules
+### Application layer
 
-- `messages.ts`: discriminated message contracts and runtime guards.
-- `selection.ts`: pure viewport geometry and CSS-to-image coordinate mapping.
-- `decode.ts`: image loading, canvas crop, `jsQR`, and small-code retry.
-- `result.ts`: payload classification and protocol allow-listing.
-- `security/link-security.ts`: deterministic, side-effect-free link risk assessment.
+`src/application/snipper-application.ts` coordinates the workflow:
 
-### Application and UI modules
+- mounts and destroys the view;
+- owns invocation and screenshot lifetime;
+- starts and cancels decode requests;
+- translates selection rectangles into screenshot crops;
+- classifies decoded payloads;
+- requests link-security assessment;
+- chooses result, warning, and failure presentations; and
+- sends an Open request only after a user action.
 
-- `application/snipper-application.ts`: use-case orchestration through injected decoder/view dependencies.
-- `ui/selection-gesture.ts`: pointer lifecycle and selection callbacks only.
-- `ui/snipper-view.ts`: Shadow DOM construction and presentation only.
-- `ui/snipper-styles.ts` and `ui/icons.ts`: visual assets without application decisions.
+Application cleanup aborts active decoding, terminates the worker, detaches pointer and keyboard listeners, clears screenshot references, and unmounts the Shadow DOM host.
 
-This separation follows SOLID without hiding the browser workflow behind generic abstractions. The entrypoint composes concrete dependencies; the application depends on the narrow `SelectionDecoder` contract; geometry and security remain pure; and the view never decides whether a link is safe to open.
+### Core and security modules
 
-Core modules should remain free of extension APIs where possible. This keeps security-critical logic testable.
+- `src/core/messages.ts`: discriminated runtime-message contracts and defensive shape guards.
+- `src/core/selection.ts`: normalized pointer rectangles, minimum selection size, clamping, and CSS-to-image coordinate mapping.
+- `src/core/decode.ts`: `QrDecoder` contract, image/canvas adapter, resource-constrained crop, transferable-buffer worker client, cancellation, and typed outcomes.
+- `src/core/decode-pipeline.ts`: canvas-independent RGBA validation, decode retry policy, scaling, and `jsQR` invocation.
+- `src/core/result.ts`: payload normalization, size limits, URL/email/phone/text classification, display truncation, and protocol allow list.
+- `src/security/link-security.ts`: deterministic, side-effect-free HTTP(S) warning assessment and hostname presentation.
 
-## 3. Coordinate model
+### UI and worker modules
 
-Pointer events report CSS viewport pixels while screenshots use physical/rendered image pixels. Never assume `devicePixelRatio` is the scale; browser zoom and platform capture behavior can differ.
+- `src/ui/selection-gesture.ts`: pointer capture and selection callbacks; it contains no decoding or navigation decisions.
+- `src/ui/snipper-view.ts`: closed Shadow DOM construction, accessible status/result rendering, actions, toast, and contained copy fallback.
+- `src/ui/snipper-styles.ts`: Material 3 Expressive colors, shapes, layout, state layers, responsive behavior, and motion preferences.
+- `src/ui/icons.ts`: trusted internal SVG icon markup. Decoded values never enter this path.
+- `src/workers/qr-decoder.worker.ts`: reconstructs the transferred RGBA view, runs the pure pipeline, and returns only the request ID, value, or local error category.
 
-Use measured ratios:
+## 5. Decoder pipeline and resource budgets
+
+The page's main thread loads the browser-produced PNG, draws only the selected crop into a temporary canvas, reads its RGBA pixels, resets the canvas allocation, and transfers the underlying `ArrayBuffer` to the inline worker.
+
+Current hard limits are:
+
+- 4,096 pixels on the longest decode dimension;
+- 4,000,000 pixels for a decode input; and
+- a 2,000,000-pixel retry budget for downscaling a large failed input.
+
+The worker pipeline:
+
+1. validates dimensions and exact RGBA buffer length;
+2. attempts `jsQR` with `inversionAttempts: 'attemptBoth'`;
+3. retries a large failed image inside the lower pixel budget; and
+4. enlarges a failed small crop by 2× when its shorter dimension is below 320 pixels.
+
+Retry behavior must remain bounded and fixture-driven. Do not add an unbounded matrix of filters, rotations, thresholds, or decoder formats.
+
+## 6. Coordinate model
+
+Pointer events report CSS viewport pixels while screenshots use rendered image pixels. `devicePixelRatio` alone is not a reliable scale because browser zoom and platform capture behavior can differ.
+
+Measure each axis from the actual capture:
 
 ```text
 scaleX = screenshot.naturalWidth  / window.innerWidth
 scaleY = screenshot.naturalHeight / window.innerHeight
 ```
 
-Floor crop origins, ceil crop endings, and clamp the result to the actual image. This avoids cutting off the outermost QR modules because of rounding.
+Floor crop origins, ceil crop endings, and clamp the result to the image. This deliberately includes boundary pixels rather than cutting off an outer QR module because of rounding.
 
-## 4. Permissions and threat model
+Geometry belongs in `src/core/selection.ts` and must remain testable without DOM or browser APIs.
+
+## 7. Permissions and trust boundaries
 
 ### Declared permissions
 
-- `activeTab`: temporary access following toolbar/shortcut invocation; no install warning for broad host access.
-- `scripting`: inject the snipping content bundle into the invoked tab.
+- `activeTab`: temporary access following toolbar or shortcut invocation.
+- `scripting`: runtime injection into the invoked tab.
 
-There is deliberately no `<all_urls>`, `tabs`, `storage`, clipboard, downloads, or network host permission.
+There is deliberately no `<all_urls>`, `tabs`, `storage`, clipboard, downloads, network host, or persistent content-script permission. Firefox additionally declares `data_collection_permissions.required: ["none"]`, which is a no-collection disclosure rather than access to user data.
 
 ### Trust boundaries
 
-| Input | Risk | Control |
+| Input or boundary | Risk | Control |
 | --- | --- | --- |
-| Host page | CSS/event interference | Closed Shadow Root, captured frame, isolated content world |
-| Screenshot | Large allocation, malformed image | Browser-produced data URL, bounded visible viewport, decode failure state |
-| QR payload | Script URL, huge/untrusted text | Render with `textContent`; strict protocol allow list in content and background |
-| Runtime message | Forged or malformed data | Runtime shape guards and background validation |
-| Clipboard | API denial | User-triggered call and contained fallback |
+| Host page | CSS/event interference or visual imitation | Isolated content world, closed Shadow Root, frozen screenshot, consistent toolbar-initiated flow |
+| Screenshot data URL | Large allocation or unexpected image failure | Browser-produced source, visible viewport only, selected-crop canvas, typed error state |
+| RGBA worker message | Excessive memory or malformed dimensions | Dimension, pixel-count, and exact-buffer-length validation |
+| QR payload | Script URL, active markup, control characters, or huge text | `textContent`, normalization, payload limits, display truncation, strict protocol allow list |
+| Link assessment | False sense of safety | Deterministic warnings, explicit disclaimer, exact hostname, no remote trust claim |
+| Runtime message | Forged or malformed data | Shape guards, invocation IDs, stale-tab checks, and privileged-boundary protocol validation |
+| Clipboard | API denial or page observation | User-triggered API call; fallback element remains inside the closed Shadow Root and is immediately removed |
 
-The page can visually imitate an extension overlay, so never ask for credentials or security decisions inside QR Snip. The result card should display the full decoded destination before Open.
+The host page can visually imitate an extension overlay. QR Snip must therefore never ask for credentials, claim a destination is safe, or hide the exact destination behind a friendly title.
 
-## 5. Browser differences
+## 8. Browser differences
 
-- The build scripts force Firefox MV3 because WXT otherwise defaults Firefox to MV2.
-- Firefox 125 and earlier required broader permission for `captureVisibleTab`. The manifest targets Firefox 140+ so AMO's built-in no-data declaration is also supported without a custom fallback consent experience.
-- Firefox declares `data_collection_permissions.required: ["none"]`, matching the local-only runtime design and current AMO submission requirements.
-- Firefox and Chromium differ in restricted URLs and temporary extension loading. Treat a failed injection as an expected platform error.
-- Do not use the native `BarcodeDetector` as the only decoder until it is broadly available. It may become an optional fast path if covered by parity tests.
-- Firefox does not implement Chromium incognito split mode; this project declares no special incognito model.
+- The Firefox scripts explicitly request MV3 because extension tooling may otherwise choose a different manifest generation path.
+- Firefox is configured for version 140+ so the current `captureVisibleTab` permission behavior and AMO no-data declaration are available.
+- Firefox and Chromium differ in restricted URLs, temporary loading, action errors, and extension debugging.
+- WXT's inline-worker output is used because a worker started from a page-world URL can violate extension-origin and packaging constraints.
+- The native `BarcodeDetector` API is not a required dependency because availability and supported formats vary across browsers. It may be evaluated only as an optional, corpus-tested fast path.
+- Firefox does not implement Chromium's incognito split mode; QR Snip declares no special incognito behavior.
 
-## 6. Data lifecycle
+Treat failed capture or injection on a privileged page as an expected platform result with a recovery message, not as a reason to request broad host access.
 
-1. Browser creates a PNG data URL in the background worker.
-2. The background sends it once to the invoked content script.
-3. The content controller holds it while the overlay is open.
-4. Canvas contains only the selected crop during decoding.
-5. `destroy()` removes the host and clears object references.
-6. No storage API is requested or called.
+## 9. Data lifecycle
 
-For memory-hardening, a future iteration can send a compressed JPEG where acceptable or transfer an `ArrayBuffer`; measure quality and browser message costs before changing the simple data-URL path.
+1. The browser creates a PNG data URL in the background worker after explicit activation.
+2. The background sends it to the current tab with a unique invocation ID.
+3. The application holds the URL only while the overlay is open.
+4. A temporary canvas contains only the bounded selected crop.
+5. The RGBA buffer transfers to the inline worker rather than being cloned.
+6. The worker returns a decoded string or local failure category.
+7. `destroy()` aborts work, terminates the worker, removes the host, and clears references.
+8. No storage or network API is requested or called.
 
-## 7. Extension points
+Do not retain data for diagnostics. Tests and logs may identify synthetic fixture IDs but must not emit image buffers or decoded real-world values.
 
-- Decoder adapter interface for ZXing, native BarcodeDetector, or WASM comparison
-- Options page for theme, automatic close, and default result behavior
-- Image-file scanner implemented as an extension page, not an expanded page permission
-- Context menu, using the same explicit activation and background pipeline
-- Internationalized strings via `_locales`
-- Optional, privacy-reviewed local history with explicit enable/clear controls
+## 10. Extension points
+
+Planned boundaries include:
+
+- a composite decoder adapter for fixture-proven QR fallbacks;
+- a result-interpreter registry for inactive summaries of structured text;
+- an extension-owned options page for a small, reviewed settings set;
+- an extension-owned image-file scanner that does not expand page permissions;
+- `_locales`-based runtime string lookup;
+- explicit, privacy-reviewed history only if separately enabled and designed; and
+- optional additional symbol formats described in [ROADMAP.md](ROADMAP.md).
+
+Before changing a boundary, document the new responsibility, add contract-level tests, and update the permission, threat, performance, and browser-compatibility analysis.

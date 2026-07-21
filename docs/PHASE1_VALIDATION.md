@@ -1,6 +1,6 @@
-# Phase 1 validation record
+# Reliability hardening validation record
 
-Phase 1 hardening was implemented on 2026-07-21. This record separates automated evidence from browser and reviewer checks that require a release test environment.
+The Phase 1 reliability work was implemented on 2026-07-21. This record separates reproducible repository evidence from browser, performance, and reviewer checks that require a release-test environment.
 
 ## Automated evidence
 
@@ -10,7 +10,7 @@ Phase 1 hardening was implemented on 2026-07-21. This record separates automated
 - Corpus gate: at least 90% successful positive decodes and zero false positives; failures report fixture IDs only.
 - Security tables: protocol rejection, Unicode edge whitespace, control characters, private destinations, punycode, credentials, unusual ports, display truncation, and message guards.
 - Packaging gate: Chromium MV3 and Firefox MV3 build successfully; generated manifests declare only `activeTab` and `scripting`, no host permissions, no persistent content scripts, and no external messaging.
-- Worker artifact: both builds emit a dedicated decoder worker and transfer the RGBA `ArrayBuffer` into it.
+- Worker artifact: both builds package the inline decoder worker inside the content bundle and transfer the RGBA `ArrayBuffer` into it without exposing a cross-origin worker asset.
 
 Run the complete automated gate with:
 
@@ -18,9 +18,9 @@ Run the complete automated gate with:
 pnpm check
 ```
 
-## Manual alpha checks
+## Manual release-environment checks
 
-The following checks cannot be certified by a headless unit/build run and remain part of the internal-alpha sign-off:
+The following checks cannot be certified by the current unit/build gate and remain required release evidence:
 
 - Profile representative 4K selections and confirm main-thread tasks stay below 100 ms.
 - Compare heap after the first and fifth repeated scan; post-cleanup heap should remain within 10%.
@@ -29,4 +29,4 @@ The following checks cannot be certified by a headless unit/build run and remain
 - Exercise each restricted-page recovery message on browser-owned pages and extension stores.
 - Complete the security-reviewer sign-off for the threat table and residual risks in `SECURITY.md`.
 
-Do not describe Phase 1 as browser-validated or security-signed-off until these checks are recorded with browser versions, reviewer, commit, and date.
+Do not describe this validation record as browser-complete or security-signed-off until these checks are recorded with browser versions, reviewer, commit, and date.
