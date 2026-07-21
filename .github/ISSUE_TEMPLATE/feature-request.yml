@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a user problem or capability for QR Snip.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should QR Snip solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the interaction and expected result without prescribing unnecessary implementation details.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: How do users handle this today?
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Privacy, security, and permission impact
+      description: Would this require storage, network access, new permissions, new executable formats, or automatic actions?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Product principles
+      options:
+        - label: The proposal preserves preview-before-open behavior.
+          required: true
+        - label: I searched the roadmap and existing issues for this proposal.
+          required: true

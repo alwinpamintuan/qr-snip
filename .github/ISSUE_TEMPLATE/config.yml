@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/alwinpamintuan/qr-snip/security/advisories/new
+    about: Report security or privacy vulnerabilities privately. Do not open a public issue.
+  - name: Support guidance
+    url: https://github.com/alwinpamintuan/qr-snip/blob/main/SUPPORT.md
+    about: Read what information to collect before opening an issue.

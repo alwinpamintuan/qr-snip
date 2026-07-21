@@ -1,0 +1,67 @@
+name: QR compatibility report
+description: Report a QR design or rendering condition that does not decode reliably.
+title: "[Compatibility]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compatibility claims are fixture-backed. Please provide a synthetic sample that the project may retain and test. Never upload a sensitive real-world QR code.
+
+  - type: input
+    id: generator
+    attributes:
+      label: Generator or source
+      description: Application/service and version, if known.
+      placeholder: python-qrcode 8.x, Canva, Adobe Express, unknown
+
+  - type: checkboxes
+    id: design
+    attributes:
+      label: Design characteristics
+      options:
+        - label: Standard square modules
+        - label: Inverted colors
+        - label: Colored or gradient modules
+        - label: Rounded, dotted, connected, or gapped modules
+        - label: Embedded logo
+        - label: Decorated finder eyes
+        - label: Transparent or patterned background
+        - label: Rotation, perspective, or skew
+        - label: Blur, compression, resampling, or video capture
+        - label: Partial crop or missing quiet zone
+
+  - type: textarea
+    id: sample
+    attributes:
+      label: Synthetic sample and expected payload
+      description: Attach a redistributable sample or link to a minimal generator recipe. State the expected payload using a reserved domain such as example.com.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Test environment
+      description: Include QR Snip version, OS, browser/version, browser zoom, display scaling, and approximate on-screen QR size.
+    validations:
+      required: true
+
+  - type: textarea
+    id: result
+    attributes:
+      label: Observed result
+      description: State whether the scan returned no result, a resource warning, or an incorrect payload.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Fixture permission
+      options:
+        - label: I created this synthetic sample or have permission to redistribute it for automated testing.
+          required: true
+        - label: The sample contains no credentials, private links, identity data, tickets, Wi-Fi secrets, or other sensitive information.
+          required: true

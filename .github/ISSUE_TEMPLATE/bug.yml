@@ -1,0 +1,95 @@
+name: Bug report
+description: Report reproducible behavior that appears incorrect.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve QR Snip. Use synthetic, non-sensitive QR codes and screenshots. Report security vulnerabilities through the private advisory form instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: QR Snip version
+      description: Release tag, commit SHA, or "main".
+      placeholder: v0.1.0 or 7072309
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Google Chrome
+        - Microsoft Edge
+        - Brave
+        - Firefox
+        - Firefox ESR
+        - Vivaldi
+        - Opera
+        - Other Chromium-based browser
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      placeholder: 140.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: Windows 11 24H2, macOS 15, or Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Explain the observed behavior and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Open a regular HTTPS page containing a synthetic QR code.
+        2. Activate QR Snip.
+        3. Select the code.
+        4. Observe...
+    validations:
+      required: true
+
+  - type: input
+    id: display
+    attributes:
+      label: Zoom and display scaling
+      placeholder: Browser zoom 125%; Windows display scaling 150%
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Synthetic evidence
+      description: Attach only non-sensitive screenshots, fixture IDs, or sample payloads.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for this behavior.
+          required: true
+        - label: This report contains no credentials, private URLs, identity data, tickets, or other sensitive content.
+          required: true
+        - label: This is not a security vulnerability requiring private disclosure.
+          required: true
