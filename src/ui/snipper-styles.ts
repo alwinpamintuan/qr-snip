@@ -25,6 +25,18 @@ export const SNIPPER_STYLES = String.raw`
     font: inherit;
   }
 
+  .visually-hidden,
+  .copy-fallback {
+    position: fixed !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
   .qr-snip-app {
     position: fixed;
     inset: 0;
@@ -121,6 +133,7 @@ export const SNIPPER_STYLES = String.raw`
     cursor: pointer;
   }
 
+
   .icon-button:hover {
     background: color-mix(in srgb, var(--qr-primary) 10%, transparent);
   }
@@ -148,7 +161,9 @@ export const SNIPPER_STYLES = String.raw`
 
   .selection.visible {
     display: block;
+    animation: qr-selection 140ms ease-out;
   }
+
 
   .corner {
     position: absolute;
@@ -255,6 +270,24 @@ export const SNIPPER_STYLES = String.raw`
     user-select: text;
   }
 
+  .hostname-row {
+    display: grid;
+    gap: 3px;
+    margin: 20px 0 -8px;
+    padding: 14px 16px;
+    color: var(--qr-on-surface);
+    background: color-mix(in srgb, var(--qr-primary-container) 66%, var(--qr-surface));
+    border: 1px solid color-mix(in srgb, var(--qr-primary) 24%, transparent);
+    border-radius: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  .hostname-row[hidden] { display: none; }
+  .hostname-label { color: var(--qr-on-surface-variant); font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+  .hostname-unicode { font-size: 16px; line-height: 1.35; }
+  .hostname-ascii { color: var(--qr-on-surface-variant); font-size: 12px; }
+  .hostname-row.same-hostname .hostname-ascii { display: none; }
+
   .result-actions {
     display: flex;
     flex-wrap: wrap;
@@ -325,6 +358,10 @@ export const SNIPPER_STYLES = String.raw`
     from { opacity: 0; transform: translate(-50%, 8px); }
   }
 
+  @keyframes qr-selection {
+    from { opacity: 0; transform: scale(.98); }
+  }
+
   @media (prefers-color-scheme: dark) {
     :host {
       --qr-primary: #dcb9f5;
@@ -363,5 +400,10 @@ export const SNIPPER_STYLES = String.raw`
     .result-actions { display: grid; grid-template-columns: 1fr 1fr; }
     .action-button:last-child:nth-child(odd) { grid-column: 1 / -1; }
   }
-`;
 
+  @media (max-height: 560px) {
+    .top-bar { top: 8px; min-height: 48px; }
+    .result-card { max-height: calc(100vh - 20px); padding: 18px; }
+    .result-value { max-height: 108px; margin-block: 14px; }
+  }
+`;

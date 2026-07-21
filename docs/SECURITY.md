@@ -10,7 +10,7 @@ The default behavior is deliberately preview-first:
 2. It displays the complete payload as selectable text.
 3. It never navigates automatically.
 4. The user must explicitly choose Open.
-5. Links with suspicious signals require a second “Open anyway” confirmation.
+5. Links with suspicious signals show the reasons directly in the first preview and use an explicit “Open anyway” action.
 6. The background validates the protocol again before creating a tab.
 
 ## Current controls
@@ -49,7 +49,7 @@ HTTP(S) links are assessed for understandable, deterministic warning signals:
 - localhost, `.local`, loopback, link-local, and RFC 1918-style private IPv4 destinations; and
 - explicit non-default ports.
 
-These heuristics do not claim to detect phishing. They add friction around common ambiguity and local-network risks. A warned destination first shows **Review link**, then a second screen with each reason and an explicit **Open anyway** action.
+These heuristics do not claim to detect phishing. They add understandable context around common ambiguity and local-network risks. A warned destination immediately shows the scanned value, canonical destination when different, every detected signal, and an explicit **Open anyway** action. There is no information-free intermediate step.
 
 ## Threat analysis
 
@@ -58,7 +58,7 @@ These heuristics do not claim to detect phishing. They add friction around commo
 | Malicious QR opens phishing or malware | User leaves trusted context | Full preview; no automatic open; warning heuristics; explicit click | Safe-looking HTTPS can still be malicious. Consider optional reputation checks only with separate consent and a clear privacy tradeoff. |
 | `javascript:` or `data:` execution | Code execution/navigation | Protocol allow list in two runtime boundaries | Maintain regression tests for encoded/mixed-case variants. |
 | QR payload injects HTML | UI/script injection | All untrusted values use `textContent` | Add DOM-focused tests before any rich preview renderer. |
-| QR points to router/admin/private service | CSRF-like or network probing after navigation | Local/private targets require second confirmation | Navigation itself can still make a GET request. Never prefetch destination metadata. |
+| QR points to router/admin/private service | CSRF-like or network probing after navigation | Local/private targets receive an inline warning and explicit “Open anyway” action | Navigation itself can still make a GET request. Never prefetch destination metadata. |
 | Internationalized-domain homograph | Credential theft | Punycode warning and exact destination preview | Consider showing both Unicode and ASCII domain forms with a vetted library. |
 | Host page imitates QR Snip | User confusion | QR Snip asks for no credentials and keeps a consistent toolbar-initiated flow | Page overlays cannot be made impossible. Store copy should tell users the extension never asks them to sign in. |
 | Host page interferes with overlay | Incorrect selection or spoofing | Isolated content world, closed Shadow Root, frozen captured image, maximum z-index | Browser/page accessibility layers may still conflict; test hostile CSS/DOM mutation fixtures. |

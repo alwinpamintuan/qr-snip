@@ -1,24 +1,26 @@
-import { decodeSelection, type DecodeOutcome } from '../core/decode';
-import { classifyResult, type ClassifiedResult } from '../core/result';
-import { toPixelCrop, type PixelCrop, type SelectionRect } from '../core/selection';
+import { WorkerQrDecoder, type DecodeOutcome, type QrDecoder } from '../core/decode';
+import { classifyResult, displayPayload, type ClassifiedResult } from '../core/result';
+import { toPixelCrop, type SelectionRect } from '../core/selection';
 import { assessLinkSecurity, type LinkSecurityAssessment } from '../security/link-security';
+import { toUnicode } from 'punycode';
 import { ICONS } from '../ui/icons';
 import { SelectionGesture } from '../ui/selection-gesture';
 import { SnipperView } from '../ui/snipper-view';
 
-export type SelectionDecoder = (screenshotUrl: string, crop: PixelCrop) => Promise<DecodeOutcome>;
-
 export class SnipperApplication {
   private gesture: SelectionGesture | null = null;
   private screenshotUrl = '';
+  private invocationId = '';
+  private decodeController: AbortController | null = null;
 
   constructor(
     private readonly view: SnipperView,
-    private readonly decode: SelectionDecoder = decodeSelection,
+    private readonly decoder: QrDecoder = new WorkerQrDecoder(),
   ) {}
 
-  start(screenshotUrl: string): void {
+  start(invocationId: string, screenshotUrl: string): void {
     this.destroy();
+    this.invocationId = invocationId;
     this.screenshotUrl = screenshotUrl;
     this.view.mount(screenshotUrl, {
       onClose: () => this.destroy(),
@@ -35,8 +37,12 @@ export class SnipperApplication {
 
   destroy(): void {
     window.removeEventListener('keydown', this.onKeyDown, true);
+    this.decodeController?.abort();
+    this.decodeController = null;
+    this.decoder.destroy();
     this.gesture?.detach();
     this.gesture = null;
+    this.invocationId = '';
     this.screenshotUrl = '';
     this.view.unmount();
   }
@@ -48,63 +54,86 @@ export class SnipperApplication {
 
   private async scan(selection: SelectionRect): Promise<void> {
     if (!this.view.snapshotIsReady) return;
+    const invocationId = this.invocationId;
+    this.decodeController?.abort();
+    this.decodeController = new AbortController();
+    this.view.setBusy(true);
     this.view.setInstruction('Scanning selection…', 'Everything stays on this device');
     const crop = toPixelCrop(
       selection,
       { width: window.innerWidth, height: window.innerHeight },
       this.view.snapshotDimensions,
     );
-    const outcome = await this.decode(this.screenshotUrl, crop);
-    if (!this.screenshotUrl) return;
-    if (outcome.ok) this.previewResult(classifyResult(outcome.value));
-    else this.showDecodeFailure(outcome.reason);
+    const outcome = await this.decoder.decode(this.screenshotUrl, crop, this.decodeController.signal);
+    if (!this.screenshotUrl || invocationId !== this.invocationId) return;
+    this.view.setBusy(false);
+    if (outcome.ok) {
+      this.previewResult(classifyResult(outcome.value));
+    } else if (outcome.reason !== 'cancelled') {
+      this.showDecodeFailure(outcome.reason);
+    }
   }
 
   private previewResult(result: ClassifiedResult): void {
     const linkSecurity = result.kind === 'url' && result.openUrl
-      ? assessLinkSecurity(result.openUrl)
+      ? assessLinkSecurity(result.openUrl, toUnicode)
       : undefined;
+    const displayed = displayPayload(result.value);
+
+    if (result.openUrl && linkSecurity?.requiresConfirmation) {
+      this.previewSuspiciousLink(result, linkSecurity);
+      return;
+    }
+
     this.view.showResult({
       title: 'QR code found',
-      subtitle: this.previewSubtitle(result, linkSecurity),
-      value: result.value,
-      isWarning: Boolean(linkSecurity?.requiresConfirmation),
+      subtitle: `${result.label} · preview only${displayed.truncated ? ' · long value' : ''}`,
+      value: displayed.text,
+      ...(linkSecurity ? { hostname: linkSecurity.hostname } : {}),
+      isWarning: false,
       actions: [
         { label: 'Scan another', icon: ICONS.refresh, onSelect: () => this.reset() },
         { label: 'Copy', icon: ICONS.copy, onSelect: () => void this.copyValue(result.value) },
         ...(result.openUrl ? [{
-          label: linkSecurity?.requiresConfirmation ? 'Review link' : this.openLabel(result),
+          label: this.openLabel(result),
           icon: ICONS.open,
           filled: true,
-          onSelect: () => linkSecurity?.requiresConfirmation
-            ? this.confirmSuspiciousLink(result.openUrl!, linkSecurity)
-            : this.openResult(result.openUrl!),
+          onSelect: () => this.openResult(result.openUrl!),
         }] : []),
       ],
     });
   }
 
-  private confirmSuspiciousLink(url: string, assessment: LinkSecurityAssessment): void {
+  private previewSuspiciousLink(result: ClassifiedResult, assessment: LinkSecurityAssessment): void {
+    const url = result.openUrl!;
     const explanation = assessment.risks.map((risk) => `• ${risk.message}`).join('\n');
+    const resolvedDestination = result.value === url ? '' : `\n\nResolved destination\n${url}`;
+    const review = displayPayload(
+      `Scanned value\n${result.value}${resolvedDestination}\n\nWhy this needs care\n${explanation}`
+      + '\n\nThese signals do not prove the link is malicious.',
+    );
     this.view.showResult({
-      title: 'Review before opening',
-      subtitle: 'This destination has security signals worth checking.',
-      value: `Destination\n${url}\n\nWhy this needs care\n${explanation}`,
+      title: 'Check this destination',
+      subtitle: `${assessment.risks.length} warning ${assessment.risks.length === 1 ? 'signal' : 'signals'} · nothing has opened${review.truncated ? ' · long value' : ''}`,
+      value: review.text,
+      hostname: assessment.hostname,
       isWarning: true,
       actions: [
-        { label: 'Back', onSelect: () => this.previewResult(classifyResult(url)) },
-        { label: 'Copy instead', icon: ICONS.copy, onSelect: () => void this.copyValue(url) },
+        { label: 'Scan another', icon: ICONS.refresh, onSelect: () => this.reset() },
+        { label: 'Copy instead', icon: ICONS.copy, onSelect: () => void this.copyValue(result.value) },
         { label: 'Open anyway', icon: ICONS.open, filled: true, onSelect: () => this.openResult(url) },
       ],
     });
   }
 
-  private showDecodeFailure(reason: 'not-found' | 'image-error'): void {
+  private showDecodeFailure(reason: 'not-found' | 'image-error' | 'resource-limit'): void {
     this.view.showResult({
       title: 'Try a wider selection',
       subtitle: reason === 'not-found'
         ? 'No QR code was found in that area.'
-        : 'The screen capture could not be read.',
+        : reason === 'resource-limit'
+          ? 'That area is too large to scan safely.'
+          : 'The screen capture could not be read.',
       value: 'Include the full QR code and a small margin around it. Avoid selecting only part of the code.',
       isWarning: true,
       actions: [
@@ -112,11 +141,6 @@ export class SnipperApplication {
         { label: 'Try again', icon: ICONS.refresh, filled: true, onSelect: () => this.reset() },
       ],
     });
-  }
-
-  private previewSubtitle(result: ClassifiedResult, security?: LinkSecurityAssessment): string {
-    if (security?.requiresConfirmation) return `${result.label} · review recommended`;
-    return `${result.label} · preview only`;
   }
 
   private openLabel(result: ClassifiedResult): string {
@@ -132,13 +156,7 @@ export class SnipperApplication {
       await navigator.clipboard.writeText(value);
       this.view.showToast('Copied to clipboard');
     } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = value;
-      Object.assign(textarea.style, { position: 'fixed', opacity: '0' });
-      document.documentElement.append(textarea);
-      textarea.select();
-      const copied = document.execCommand('copy');
-      textarea.remove();
+      const copied = this.view.copyFallback(value);
       this.view.showToast(copied ? 'Copied to clipboard' : 'Copy failed');
     }
   }
@@ -149,8 +167,11 @@ export class SnipperApplication {
   }
 
   private reset(): void {
+    this.decodeController?.abort();
+    this.decodeController = null;
     this.gesture?.cancel();
     this.view.resetSelection();
+    this.view.setBusy(false);
     this.view.setInstruction('Drag around a QR code', 'Press Esc to cancel');
   }
 

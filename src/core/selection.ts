@@ -59,4 +59,3 @@ export function toPixelCrop(
     sh: Math.max(1, bottom - sy),
   };
 }
-

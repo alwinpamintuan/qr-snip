@@ -1,5 +1,6 @@
 export type StartCaptureMessage = {
   type: 'START_CAPTURE';
+  invocationId: string;
   screenshotUrl: string;
 };
 
@@ -14,7 +15,11 @@ export type ContentMessage = StartCaptureMessage;
 export function isStartCaptureMessage(value: unknown): value is StartCaptureMessage {
   if (typeof value !== 'object' || value === null) return false;
   const message = value as Partial<StartCaptureMessage>;
-  return message.type === 'START_CAPTURE' && typeof message.screenshotUrl === 'string';
+  return message.type === 'START_CAPTURE'
+    && typeof message.invocationId === 'string'
+    && message.invocationId.length > 0
+    && typeof message.screenshotUrl === 'string'
+    && message.screenshotUrl.startsWith('data:image/');
 }
 
 export function isOpenResultMessage(value: unknown): value is OpenResultMessage {
@@ -22,4 +27,3 @@ export function isOpenResultMessage(value: unknown): value is OpenResultMessage 
   const message = value as Partial<OpenResultMessage>;
   return message.type === 'OPEN_RESULT' && typeof message.url === 'string';
 }
-

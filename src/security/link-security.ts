@@ -6,6 +6,10 @@ export type LinkRisk = Readonly<{
 export type LinkSecurityAssessment = Readonly<{
   requiresConfirmation: boolean;
   risks: readonly LinkRisk[];
+  hostname: Readonly<{
+    ascii: string;
+    unicode: string;
+  }>;
 }>;
 
 const PRIVATE_IPV4_PATTERNS = [
@@ -16,7 +20,7 @@ const PRIVATE_IPV4_PATTERNS = [
   /^172\.(1[6-9]|2\d|3[01])\./,
 ];
 
-export function assessLinkSecurity(value: string): LinkSecurityAssessment {
+export function assessLinkSecurity(value: string, toUnicode: (hostname: string) => string = (hostname) => hostname): LinkSecurityAssessment {
   const url = new URL(value);
   const risks: LinkRisk[] = [];
 
@@ -47,7 +51,14 @@ export function assessLinkSecurity(value: string): LinkSecurityAssessment {
     risks.push({ code: 'unusual-port', message: `The link uses the unusual port ${url.port}.` });
   }
 
-  return { requiresConfirmation: risks.length > 0, risks };
+  return {
+    requiresConfirmation: risks.length > 0,
+    risks,
+    hostname: {
+      ascii: url.hostname,
+      unicode: toUnicode(url.hostname),
+    },
+  };
 }
 
 function isIpAddress(hostname: string): boolean {
@@ -67,4 +78,3 @@ function usesUnusualPort(url: URL): boolean {
   return !((url.protocol === 'http:' && url.port === '80')
     || (url.protocol === 'https:' && url.port === '443'));
 }
-

@@ -13,6 +13,7 @@ export type ResultPresentation = Readonly<{
   title: string;
   subtitle: string;
   value: string;
+  hostname?: Readonly<{ ascii: string; unicode: string }>;
   isWarning: boolean;
   actions: readonly ResultAction[];
 }>;
@@ -101,6 +102,15 @@ export class SnipperView {
     this.resultCard.querySelector('.result-title')!.textContent = presentation.title;
     this.resultCard.querySelector('.result-subtitle')!.textContent = presentation.subtitle;
     this.resultCard.querySelector('.result-value')!.textContent = presentation.value;
+    const hostname = this.resultCard.querySelector<HTMLElement>('.hostname-row')!;
+    if (presentation.hostname) {
+      hostname.hidden = false;
+      hostname.querySelector<HTMLElement>('.hostname-ascii')!.textContent = presentation.hostname.ascii;
+      hostname.querySelector<HTMLElement>('.hostname-unicode')!.textContent = presentation.hostname.unicode;
+      hostname.classList.toggle('same-hostname', presentation.hostname.ascii === presentation.hostname.unicode);
+    } else {
+      hostname.hidden = true;
+    }
 
     const status = this.resultCard.querySelector('.status-icon')!;
     status.innerHTML = presentation.isWarning ? ICONS.warning : ICONS.check;
@@ -126,6 +136,23 @@ export class SnipperView {
     this.toast.classList.add('visible');
     if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
     this.toastTimer = window.setTimeout(() => this.toast?.classList.remove('visible'), 1800);
+  }
+
+  setBusy(busy: boolean): void {
+    this.selectionSurface.classList.toggle('is-busy', busy);
+    this.resultCard?.setAttribute('aria-busy', String(busy));
+  }
+
+  copyFallback(value: string): boolean {
+    if (!this.root) return false;
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.className = 'copy-fallback';
+    this.root.append(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    return copied;
   }
 
   unmount(): void {
@@ -165,7 +192,7 @@ export class SnipperView {
           </span>
           <button class="icon-button" data-action="close" type="button" aria-label="Cancel snip">${ICONS.close}</button>
         </header>
-        <div class="selection" aria-hidden="true">
+        <div class="selection" role="region" aria-label="QR selection" aria-hidden="true">
           <span class="corner tl"></span><span class="corner tr"></span>
           <span class="corner bl"></span><span class="corner br"></span>
           <span class="selection-label"></span>
@@ -174,6 +201,11 @@ export class SnipperView {
           <div class="result-heading">
             <span class="status-icon"></span>
             <div><h1 class="result-title" id="qr-result-title"></h1><p class="result-subtitle"></p></div>
+          </div>
+          <div class="hostname-row" hidden>
+            <span class="hostname-label">Destination</span>
+            <strong class="hostname-unicode"></strong>
+            <code class="hostname-ascii"></code>
           </div>
           <div class="result-value" tabindex="0"></div>
           <div class="result-actions"></div>

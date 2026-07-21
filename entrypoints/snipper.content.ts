@@ -15,9 +15,8 @@ export default defineContentScript({
     contentGlobal.__qrSnipApplication = new SnipperApplication(new SnipperView());
     browser.runtime.onMessage.addListener((message: unknown) => {
       if (!isStartCaptureMessage(message)) return undefined;
-      contentGlobal.__qrSnipApplication?.start(message.screenshotUrl);
-      return Promise.resolve({ started: true });
+      contentGlobal.__qrSnipApplication?.start(message.invocationId, message.screenshotUrl);
+      return Promise.resolve({ started: true, invocationId: message.invocationId });
     });
   },
 });
-

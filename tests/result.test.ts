@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyResult, isAllowedOpenUrl } from '../src/core/result';
+import { classifyResult, displayPayload, isAllowedOpenUrl, normalizePayload } from '../src/core/result';
 
 describe('QR result handling', () => {
   it('recognizes secure and insecure web links', () => {
@@ -25,5 +25,28 @@ describe('QR result handling', () => {
     expect(isAllowedOpenUrl('data:text/html,hello')).toBe(false);
     expect(isAllowedOpenUrl('https://example.com')).toBe(true);
     expect(isAllowedOpenUrl('mailto:hello@example.com')).toBe(true);
+  });
+
+  it.each([
+    'javascript:alert(1)',
+    ' JAVASCRIPT:alert(1) ',
+    '\u00a0data:text/html,hello\u00a0',
+    'file:///etc/passwd',
+    'chrome://settings',
+    'https://example.com/\u0000hidden',
+  ])('rejects dangerous, normalized, or controlled navigation input: %s', (value) => {
+    expect(isAllowedOpenUrl(value)).toBe(false);
+  });
+
+  it('normalizes Unicode edge whitespace without mutating interior content', () => {
+    expect(normalizePayload('\u2003 hello world \uFEFF')).toBe('hello world');
+  });
+
+  it('limits rendering while preserving the complete source for copy', () => {
+    const value = 'x'.repeat(20_000);
+    const displayed = displayPayload(value);
+    expect(displayed.truncated).toBe(true);
+    expect(displayed.text.length).toBeLessThan(value.length);
+    expect(classifyResult(value).value).toBe(value);
   });
 });

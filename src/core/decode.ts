@@ -1,59 +1,108 @@
-import jsQR from 'jsqr';
 import type { PixelCrop } from './selection';
+import { constrainedDimensions } from './decode-pipeline';
 
 export type DecodeOutcome =
   | Readonly<{ ok: true; value: string }>
-  | Readonly<{ ok: false; reason: 'not-found' | 'image-error' }>;
+  | Readonly<{ ok: false; reason: 'not-found' | 'image-error' | 'cancelled' | 'resource-limit' }>;
 
-export async function decodeSelection(
-  screenshotUrl: string,
-  crop: PixelCrop,
-): Promise<DecodeOutcome> {
-  try {
-    const image = await loadImage(screenshotUrl);
-    const canvas = document.createElement('canvas');
-    canvas.width = crop.sw;
-    canvas.height = crop.sh;
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    if (!context) return { ok: false, reason: 'image-error' };
+export interface QrDecoder {
+  decode(screenshotUrl: string, crop: PixelCrop, signal: AbortSignal): Promise<DecodeOutcome>;
+  destroy(): void;
+}
 
-    context.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, crop.sw, crop.sh);
-    const direct = decodeCanvas(context, crop.sw, crop.sh);
-    if (direct) return { ok: true, value: direct };
+type WorkerResponse = Readonly<{
+  requestId: number;
+  value: string | null;
+  error?: 'resource-limit' | 'image-error';
+}>;
 
-    // A modest nearest-neighbor upscale helps with small on-screen QR codes.
-    if (Math.min(crop.sw, crop.sh) < 320) {
-      const scale = 2;
-      const enlarged = document.createElement('canvas');
-      enlarged.width = crop.sw * scale;
-      enlarged.height = crop.sh * scale;
-      const enlargedContext = enlarged.getContext('2d', { willReadFrequently: true });
-      if (enlargedContext) {
-        enlargedContext.imageSmoothingEnabled = false;
-        enlargedContext.drawImage(canvas, 0, 0, enlarged.width, enlarged.height);
-        const retried = decodeCanvas(enlargedContext, enlarged.width, enlarged.height);
-        if (retried) return { ok: true, value: retried };
+export class WorkerQrDecoder implements QrDecoder {
+  private worker: Worker | null = null;
+  private requestId = 0;
+
+  async decode(screenshotUrl: string, crop: PixelCrop, signal: AbortSignal): Promise<DecodeOutcome> {
+    if (signal.aborted) return { ok: false, reason: 'cancelled' };
+    try {
+      const image = await loadImage(screenshotUrl, signal);
+      const dimensions = constrainedDimensions(crop.sw, crop.sh);
+      const canvas = document.createElement('canvas');
+      canvas.width = dimensions.width;
+      canvas.height = dimensions.height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) return { ok: false, reason: 'image-error' };
+      context.imageSmoothingEnabled = dimensions.width === crop.sw && dimensions.height === crop.sh;
+      context.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, dimensions.width, dimensions.height);
+      const pixels = context.getImageData(0, 0, dimensions.width, dimensions.height);
+      canvas.width = 1;
+      canvas.height = 1;
+      return await this.decodePixels(pixels, signal);
+    } catch (error) {
+      if (signal.aborted || error instanceof DOMException && error.name === 'AbortError') {
+        return { ok: false, reason: 'cancelled' };
       }
+      if (error instanceof RangeError) return { ok: false, reason: 'resource-limit' };
+      return { ok: false, reason: 'image-error' };
     }
+  }
 
-    return { ok: false, reason: 'not-found' };
-  } catch {
-    return { ok: false, reason: 'image-error' };
+  destroy(): void {
+    this.worker?.terminate();
+    this.worker = null;
+  }
+
+  private decodePixels(pixels: ImageData, signal: AbortSignal): Promise<DecodeOutcome> {
+    const worker = this.getWorker();
+    const requestId = ++this.requestId;
+    return new Promise((resolve) => {
+      const finish = (outcome: DecodeOutcome): void => {
+        worker.removeEventListener('message', onMessage);
+        worker.removeEventListener('error', onError);
+        signal.removeEventListener('abort', onAbort);
+        resolve(outcome);
+      };
+      const onMessage = (event: MessageEvent<WorkerResponse>): void => {
+        if (event.data.requestId !== requestId) return;
+        if (event.data.error) finish({ ok: false, reason: event.data.error });
+        else if (event.data.value) finish({ ok: true, value: event.data.value });
+        else finish({ ok: false, reason: 'not-found' });
+      };
+      const onError = (): void => finish({ ok: false, reason: 'image-error' });
+      const onAbort = (): void => {
+        this.destroy();
+        finish({ ok: false, reason: 'cancelled' });
+      };
+      worker.addEventListener('message', onMessage);
+      worker.addEventListener('error', onError);
+      signal.addEventListener('abort', onAbort, { once: true });
+      worker.postMessage({
+        requestId,
+        buffer: pixels.data.buffer,
+        width: pixels.width,
+        height: pixels.height,
+      }, [pixels.data.buffer]);
+    });
+  }
+
+  private getWorker(): Worker {
+    this.worker ??= new Worker(new URL('../workers/qr-decoder.worker.ts', import.meta.url), { type: 'module' });
+    return this.worker;
   }
 }
 
-function decodeCanvas(context: CanvasRenderingContext2D, width: number, height: number): string | null {
-  const pixels = context.getImageData(0, 0, width, height);
-  const result = jsQR(pixels.data, width, height, { inversionAttempts: 'attemptBoth' });
-  return result?.data || null;
-}
-
-function loadImage(url: string): Promise<HTMLImageElement> {
+function loadImage(url: string, signal: AbortSignal): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.addEventListener('load', () => resolve(image), { once: true });
-    image.addEventListener('error', () => reject(new Error('Screenshot could not be loaded.')), { once: true });
+    const cleanup = (): void => {
+      image.removeEventListener('load', onLoad);
+      image.removeEventListener('error', onError);
+      signal.removeEventListener('abort', onAbort);
+    };
+    const onLoad = (): void => { cleanup(); resolve(image); };
+    const onError = (): void => { cleanup(); reject(new Error('Screenshot could not be loaded.')); };
+    const onAbort = (): void => { cleanup(); image.src = ''; reject(new DOMException('Cancelled', 'AbortError')); };
+    image.addEventListener('load', onLoad, { once: true });
+    image.addEventListener('error', onError, { once: true });
+    signal.addEventListener('abort', onAbort, { once: true });
     image.src = url;
   });
 }
-

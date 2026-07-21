@@ -11,7 +11,7 @@ This is the ordered handoff plan from the current functional foundation to a sto
 - Local `jsQR` decoder with inverted-code support and a 2× small-code retry
 - Preview-first result card; no automatic navigation
 - Protocol allow list enforced in content and background
-- Link-risk assessment and second confirmation for suspicious destinations
+- Link-risk assessment rendered directly in suspicious-destination previews
 - Material 3 Expressive light/dark/high-contrast/reduced-motion UI
 - Pure unit tests for geometry, classification, and link warnings
 - Product, architecture, security, and QA documentation
@@ -99,7 +99,7 @@ Implementation:
 Acceptance:
 
 - No navigation occurs in tests until the explicit Open action.
-- Warned links require two distinct user actions after decode.
+- Warned links expose every detected signal before the single explicit “Open anyway” navigation action.
 - Dangerous schemes fail in both layers.
 - A security reviewer signs off on the threat table and residual risks.
 
@@ -245,4 +245,3 @@ Do not add remote reputation lookup by default. If proposed, specify provider, d
 - Both generated packages pass store validation and manual smoke tests.
 - Privacy policy, support route, vulnerability reporting, changelog, and release record are published.
 - Artifact hashes map to a signed Git tag and green CI run.
-

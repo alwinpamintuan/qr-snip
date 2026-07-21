@@ -40,5 +40,5 @@ describe('selection geometry', () => {
       { width: 200, height: 200 },
     )).toEqual({ sx: 190, sy: 190, sw: 10, sh: 10 });
   });
-});
 
+});

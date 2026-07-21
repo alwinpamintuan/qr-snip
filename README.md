@@ -54,6 +54,7 @@ docs/
   PRODUCT_SPEC.md        Scope, UX states, requirements, and success measures
   ARCHITECTURE.md        Runtime boundaries, data flow, permissions, decisions
   IMPLEMENTATION_PLAN.md Detailed phased backlog and acceptance criteria
+  PHASE1_VALIDATION.md   Automated evidence and manual alpha sign-off checklist
   SECURITY.md            Threat model, preview policy, and release review
   QA.md                  Browser, accessibility, performance, and release matrix
 ```
@@ -67,7 +68,7 @@ docs/
 5. CSS selection coordinates are mapped to captured image pixels, including display scaling and page zoom.
 6. `jsQR` decodes the selected pixels locally, with a second enlarged pass for small codes.
 7. The result is classified and rendered as a preview with copy, retry, and protocol-limited open actions.
-8. Suspicious links receive deterministic warnings and require a second “Open anyway” confirmation.
+8. Suspicious links show their warning signals directly in the preview and use an explicit “Open anyway” action.
 9. Closing the overlay releases all in-memory screenshot references.
 
 ## Commands
