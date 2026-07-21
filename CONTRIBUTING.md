@@ -2,6 +2,8 @@
 
 QR Snip is developed feature by feature with privacy, predictable browser behavior, and evidence-backed compatibility as release constraints. Contributions should keep the default workflow simple: explicitly activate, select one QR code, review the result, then choose an action.
 
+Participation in project spaces is governed by the [Code of Conduct](CODE_OF_CONDUCT.md). Usage questions and non-security reports should follow [SUPPORT.md](SUPPORT.md); suspected vulnerabilities must use the [private security process](.github/SECURITY.md).
+
 ## Development setup
 
 Requirements:
@@ -33,6 +35,8 @@ WXT writes generated state to `.wxt/` and browser packages to `.output/`. These 
 4. Check [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) and [docs/ROADMAP.md](docs/ROADMAP.md) before introducing a new feature or abstraction.
 
 If a change deliberately alters a documented product or security decision, update the documentation in the same commit.
+
+Notable user-visible changes should also update the `[Unreleased]` section of [CHANGELOG.md](CHANGELOG.md).
 
 ## Architecture and code standards
 

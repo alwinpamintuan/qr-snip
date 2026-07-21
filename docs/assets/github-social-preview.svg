@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">QR Snip GitHub social preview</title>
+  <desc id="desc">QR Snip brand artwork with the message Scan what is already on your screen.</desc>
+  <defs>
+    <linearGradient id="background" x1="80" y1="40" x2="1180" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7ff"/>
+      <stop offset="0.52" stop-color="#f3e6f7"/>
+      <stop offset="1" stop-color="#e7d5ee"/>
+    </linearGradient>
+    <linearGradient id="card" x1="760" y1="90" x2="1130" y2="550" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#735187"/>
+      <stop offset="1" stop-color="#432654"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#2c1637" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#background)"/>
+  <circle cx="1110" cy="70" r="190" fill="#d8b9e7" opacity="0.42"/>
+  <circle cx="80" cy="590" r="230" fill="#ead5f0" opacity="0.74"/>
+
+  <g transform="translate(92 98)">
+    <g transform="scale(1.28)">
+      <path fill="#593a6d" d="M49 16h15a48 48 0 0 1 48 48v15a33 33 0 0 1-33 33H64a48 48 0 0 1-48-48V49a33 33 0 0 1 33-33Z"/>
+      <g transform="translate(34 34) scale(2.5)" fill="#f0dbff">
+        <path d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-3v-5Zm-5 5h5v3h-5v-3Zm6 1h2v2h-2v-2Z"/>
+      </g>
+    </g>
+    <text x="182" y="92" fill="#2b1734" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="76" font-weight="760" letter-spacing="-2">QR Snip</text>
+    <text x="4" y="232" fill="#2b1734" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="-1.2">
+      <tspan x="4" dy="0">Scan what’s already</tspan>
+      <tspan x="4" dy="58">on your screen.</tspan>
+    </text>
+    <text x="6" y="382" fill="#5d5260" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="500">Private, local QR decoding for Chromium and Firefox.</text>
+    <g transform="translate(4 420)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="20" font-weight="650" fill="#4a2859">
+      <rect width="166" height="48" rx="24" fill="#ead5f0"/>
+      <text x="24" y="31">Local decoding</text>
+      <rect x="180" width="214" height="48" rx="24" fill="#ead5f0"/>
+      <text x="204" y="31">Preview before open</text>
+      <rect x="408" width="214" height="48" rx="24" fill="#ead5f0"/>
+      <text x="432" y="31">Material 3 Expressive</text>
+    </g>
+  </g>
+
+  <g transform="translate(820 82)" filter="url(#shadow)">
+    <path fill="url(#card)" d="M70 0h235c81 0 147 66 147 147v229c0 92-75 167-167 167H138C62 543 0 481 0 405V70C0 31 31 0 70 0Z"/>
+    <rect x="54" y="54" width="344" height="435" rx="44" fill="#fff8ff" opacity="0.96"/>
+    <rect x="92" y="92" width="268" height="48" rx="24" fill="#ead5f0"/>
+    <circle cx="122" cy="116" r="10" fill="#593a6d"/>
+    <rect x="145" y="106" width="158" height="10" rx="5" fill="#593a6d" opacity="0.9"/>
+    <rect x="145" y="123" width="102" height="7" rx="3.5" fill="#806f82"/>
+    <rect x="92" y="168" width="268" height="198" rx="30" fill="#f5e9f7" stroke="#c6a8d0" stroke-width="3"/>
+    <g transform="translate(138 189) scale(4.35)" fill="#593a6d">
+      <path d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-3v-5Zm-5 5h5v3h-5v-3Zm6 1h2v2h-2v-2Z"/>
+    </g>
+    <rect x="92" y="394" width="150" height="54" rx="27" fill="#ead5f0"/>
+    <rect x="254" y="394" width="106" height="54" rx="27" fill="#593a6d"/>
+    <text x="126" y="428" fill="#4a2859" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Scan another</text>
+    <text x="284" y="428" fill="#fff7ff" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700">Review</text>
+  </g>
+</svg>

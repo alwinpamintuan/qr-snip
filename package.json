@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "description": "Scan a QR code anywhere in the visible browser tab with a privacy-first snipping tool.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alwinpamintuan/qr-snip.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alwinpamintuan/qr-snip/issues"
+  },
+  "homepage": "https://github.com/alwinpamintuan/qr-snip#readme",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox --mv3",

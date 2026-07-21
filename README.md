@@ -1,5 +1,8 @@
 # QR Snip
 
+[![CI](https://github.com/alwinpamintuan/qr-snip/actions/workflows/ci.yml/badge.svg)](https://github.com/alwinpamintuan/qr-snip/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-593a6d.svg)](LICENSE)
+
 QR Snip is a privacy-first browser extension for selecting and decoding a QR code already visible in the current tab. Activate the extension, draw around a code, and review its exact contents before deciding whether to copy or open it.
 
 It runs on Chromium-based browsers and Firefox, performs decoding locally, and uses a Material 3 Expressive interface that adapts to light, dark, increased-contrast, and reduced-motion preferences.
@@ -178,6 +181,8 @@ src/
 scripts/                     Fixture generation and generated-manifest assertions
 tests/                       Unit, security, geometry, and decoder-corpus tests
 docs/                        Product, architecture, QA, security, delivery, and roadmap docs
+.github/                     CI, release automation, dependency updates, and community templates
+public/icons/                Extension and toolbar brand assets
 ```
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and code-quality expectations. Read [Architecture](docs/ARCHITECTURE.md) before changing runtime boundaries or permissions and [Security](docs/SECURITY.md) before changing payload handling, navigation, clipboard behavior, persistence, or network access.
@@ -194,9 +199,19 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and c
 ## Project documentation
 
 - [Contributing](CONTRIBUTING.md): local workflow, architecture rules, tests, fixtures, UI, security, and pull-request checklist
+- [Changelog](CHANGELOG.md): notable unreleased and released changes
+- [Support](SUPPORT.md): how to request help or report a compatibility problem
+- [Security policy](.github/SECURITY.md): supported versions and private reporting instructions
 - [Product specification](docs/PRODUCT_SPEC.md): current behavior, interaction states, requirements, and success measures
 - [Architecture](docs/ARCHITECTURE.md): runtime boundaries, data flow, permissions, and extension points
 - [Security model](docs/SECURITY.md): trust boundaries, preview policy, threat analysis, and release checks
 - [Quality assurance](docs/QA.md): current validation evidence, automated gates, browser matrix, accessibility, performance, and release testing
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md): ordered work toward the 1.0 release
 - [Post-1.0 roadmap](docs/ROADMAP.md): candidate styled-QR and barcode capabilities
+- [Maintainer guide](docs/MAINTAINING.md): GitHub settings, labels, rulesets, and release procedure
+
+## Community and license
+
+Bug reports, QR compatibility samples, feature requests, and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing runtime behavior and follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project spaces. Security vulnerabilities must use the [private reporting process](.github/SECURITY.md), not a public issue.
+
+QR Snip is available under the [MIT License](LICENSE).
