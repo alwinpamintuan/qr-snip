@@ -54,6 +54,7 @@ docs/
   PRODUCT_SPEC.md        Scope, UX states, requirements, and success measures
   ARCHITECTURE.md        Runtime boundaries, data flow, permissions, decisions
   IMPLEMENTATION_PLAN.md Detailed phased backlog and acceptance criteria
+  ROADMAP.md             Candidate post-1.0 compatibility and barcode features
   PHASE1_VALIDATION.md   Automated evidence and manual alpha sign-off checklist
   SECURITY.md            Threat model, preview policy, and release review
   QA.md                  Browser, accessibility, performance, and release matrix

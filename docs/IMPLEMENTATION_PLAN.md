@@ -225,6 +225,8 @@ Acceptance:
 
 Each item requires its own privacy/security review and must not delay a secure core release:
 
+Detailed sequencing and promotion gates for styled QR and barcode compatibility are maintained in [ROADMAP.md](ROADMAP.md).
+
 - Image file/drop scanning on an extension-owned page
 - Scan all visible QR codes using a bounded worker pipeline
 - Additional 1D/2D barcode formats through a decoder adapter
