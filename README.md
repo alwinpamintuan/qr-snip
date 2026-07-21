@@ -71,6 +71,32 @@ docs/
 8. Suspicious links show their warning signals directly in the preview and use an explicit “Open anyway” action.
 9. Closing the overlay releases all in-memory screenshot references.
 
+## QR design compatibility
+
+QR Snip decodes QR symbols from pixels, so it is not tied to a particular QR generator or application. Compatibility depends on whether the finished design still preserves enough of the QR structure, contrast, resolution, and error-correction data for the decoder to recover it.
+
+“Tested” below means the design category is represented in the maintained automated fixture corpus; it is not a guarantee that every image from every generator will decode.
+
+| Compatibility | QR design or condition |
+| --- | --- |
+| **Tested** | Standard square-module QR codes; normal and inverted colors; representative high-contrast brand colors; 90° rotation; moderate resampling, blur, and partial occlusion; QR versions 1, 5, 10, 20, and 40; error correction L, M, Q, and H; 1080p, 1440p, 4K, and high-DPI screen composites |
+| **Best effort** | Rounded, dotted, connected, or gapped modules; gradients and multicolor designs; transparent backgrounds; small centered logos; decorated finder “eyes”; perspective/skew; stronger compression; QR codes captured from paused video |
+| **Not supported** | Micro QR, Data Matrix, Aztec, PDF417, or 1D barcodes; reliably choosing among multiple QR codes in one selection; severely cropped or missing finder patterns; logos/decoration that cover more data than error correction can recover; very low-contrast or extremely small codes |
+
+Styled QR codes are inherently less predictable across readers. Even QR-generation libraries that support rounded modules, gradients, and embedded images warn that styled output is not guaranteed to work with every scanner and recommend high error correction for embedded images. See the [python-qrcode styled image guidance](https://github.com/lincolnloop/python-qrcode#styled-image).
+
+For the best result:
+
+- Select one QR code at a time, including the complete code and a small border around it.
+- Keep all three large corner finder patterns fully visible.
+- If the code is small, zoom the page before invoking QR Snip.
+- Pause animated content or video on its sharpest frame.
+- Prefer strong light/dark contrast; color hue matters less than luminance contrast.
+- For logo QR codes, use a small centered logo and a generator configured for high error correction.
+- Treat a failed styled-code scan as a compatibility failure, not proof that the QR payload is invalid.
+
+The decoder is [`jsQR`](https://github.com/cozmo/jsQR), configured to try both normal and inverted luminance. The repository currently gates releases against 145 positive and 30 negative deterministic fixtures, requiring at least a 90% positive decode rate and zero false positives. See [docs/PHASE1_VALIDATION.md](docs/PHASE1_VALIDATION.md) for the measured scope and [tests/fixtures/qr/manifest.json](tests/fixtures/qr/manifest.json) for the source-of-truth corpus.
+
 ## Commands
 
 | Command | Purpose |

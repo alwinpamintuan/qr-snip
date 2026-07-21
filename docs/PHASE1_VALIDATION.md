@@ -4,7 +4,7 @@ Phase 1 hardening was implemented on 2026-07-21. This record separates automated
 
 ## Automated evidence
 
-- Deterministic corpus: 144 positive fixtures and 30 negative fixtures.
+- Deterministic corpus: 145 positive fixtures and 30 negative fixtures.
 - Coverage: QR versions 1, 5, 10, 20, and 40; L/M/Q/H error correction; normal, inverted, colored, rotated, resampled, blurred, and partially occluded images.
 - Screen composites: 1080p, 1440p, 4K, and a 2× device-scale variant with explicit crop metadata.
 - Corpus gate: at least 90% successful positive decodes and zero false positives; failures report fixture IDs only.
