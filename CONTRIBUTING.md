@@ -8,7 +8,7 @@ Participation in project spaces is governed by the [Code of Conduct](CODE_OF_CON
 
 Requirements:
 
-- Node.js 20 or newer
+- Node.js 22.13 or newer
 - pnpm 9 or newer
 - A current Chromium-based browser and Firefox 140+ for cross-browser changes
 

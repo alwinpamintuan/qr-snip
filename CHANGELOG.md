@@ -15,6 +15,10 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Deterministic positive and negative QR compatibility corpus
 - Contributor, architecture, security, QA, delivery, and post-1.0 roadmap documentation
 
+### Changed
+
+- Raised the development runtime minimum to Node.js 22.13 to match the pinned pnpm release
+
 ### Security
 
 - Navigation requires an explicit action and is restricted to `http`, `https`, `mailto`, and `tel`

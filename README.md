@@ -76,7 +76,7 @@ Browser-owned pages such as `chrome://`, `brave://`, `edge://`, extension stores
 
 ## Prerequisites and setup
 
-- Node.js 20 or newer
+- Node.js 22.13 or newer
 - pnpm 9 or newer; the repository currently pins pnpm through `packageManager`
 
 Install the exact dependency graph from the lockfile:
