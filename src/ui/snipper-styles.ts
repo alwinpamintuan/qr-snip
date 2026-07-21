@@ -13,7 +13,14 @@ export const SNIPPER_STYLES = String.raw`
     --qr-on-surface-variant: #4c454f;
     --qr-outline: #7d747f;
     --qr-error: #ba1a1a;
+    --qr-warning: #815500;
+    --qr-on-warning: #ffffff;
+    --qr-warning-container: #ffdea5;
+    --qr-on-warning-container: #2a1800;
     --qr-shadow: rgba(28, 19, 31, 0.28);
+    --qr-emphasized: cubic-bezier(.2, 0, 0, 1);
+    --qr-emphasized-decelerate: cubic-bezier(.05, .7, .1, 1);
+    --qr-standard: cubic-bezier(.2, 0, 0, 1);
     font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
   }
 
@@ -45,6 +52,8 @@ export const SNIPPER_STYLES = String.raw`
     overflow: hidden;
     user-select: none;
     touch-action: none;
+    isolation: isolate;
+    animation: qr-app-enter 240ms var(--qr-emphasized-decelerate) both;
   }
 
   .snapshot {
@@ -55,13 +64,18 @@ export const SNIPPER_STYLES = String.raw`
     object-fit: fill;
     pointer-events: none;
     filter: brightness(0.52) saturate(0.72);
+    transform: scale(1);
+    animation: qr-snapshot-settle 500ms var(--qr-emphasized-decelerate) both;
   }
 
   .scrim {
     position: absolute;
     inset: 0;
-    background: rgba(13, 10, 15, 0.28);
+    background:
+      radial-gradient(circle at 50% 42%, rgba(70, 42, 82, .08), transparent 42%),
+      rgba(13, 10, 15, 0.3);
     pointer-events: none;
+    animation: qr-scrim-in 320ms ease-out both;
   }
 
   .top-bar {
@@ -77,11 +91,14 @@ export const SNIPPER_STYLES = String.raw`
     background: color-mix(in srgb, var(--qr-surface) 94%, transparent);
     border: 1px solid color-mix(in srgb, var(--qr-outline) 24%, transparent);
     border-radius: 28px;
-    box-shadow: 0 8px 30px var(--qr-shadow);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, white 42%, transparent) inset,
+      0 8px 30px var(--qr-shadow);
     cursor: default;
     transform: translateX(-50%);
     backdrop-filter: blur(18px);
-    animation: qr-enter 260ms cubic-bezier(.2, .8, .2, 1);
+    transform-origin: 50% 0;
+    animation: qr-enter 420ms var(--qr-emphasized-decelerate) both;
   }
 
   .brand-mark {
@@ -92,6 +109,8 @@ export const SNIPPER_STYLES = String.raw`
     color: var(--qr-on-primary-container);
     background: var(--qr-primary-container);
     border-radius: 11px 16px 11px 16px;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-primary) 24%, transparent);
+    animation: qr-mark-enter 560ms var(--qr-emphasized-decelerate) 80ms both;
   }
 
   .brand-mark svg,
@@ -120,6 +139,10 @@ export const SNIPPER_STYLES = String.raw`
     font-size: 12px;
   }
 
+  .instruction.changed {
+    animation: qr-instruction-change 260ms var(--qr-emphasized-decelerate);
+  }
+
   .icon-button {
     display: grid;
     width: 40px;
@@ -131,11 +154,27 @@ export const SNIPPER_STYLES = String.raw`
     border: 0;
     border-radius: 20px;
     cursor: pointer;
+    transition:
+      color 180ms var(--qr-standard),
+      background-color 180ms var(--qr-standard),
+      transform 180ms var(--qr-emphasized);
   }
 
 
   .icon-button:hover {
     background: color-mix(in srgb, var(--qr-primary) 10%, transparent);
+  }
+
+  .icon-button:hover svg {
+    transform: rotate(8deg) scale(1.08);
+  }
+
+  .icon-button:active {
+    transform: scale(.9);
+  }
+
+  .icon-button svg {
+    transition: transform 220ms var(--qr-emphasized);
   }
 
   .icon-button:focus-visible,
@@ -157,11 +196,39 @@ export const SNIPPER_STYLES = String.raw`
       0 12px 40px rgba(19, 7, 25, .38),
       inset 0 0 0 1px rgba(255, 255, 255, .42);
     pointer-events: none;
+    transform-origin: center;
   }
 
   .selection.visible {
     display: block;
-    animation: qr-selection 140ms ease-out;
+    animation: qr-selection 220ms var(--qr-emphasized-decelerate);
+  }
+
+  .selection::after {
+    position: absolute;
+    inset: -3px;
+    content: "";
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .is-busy {
+    cursor: progress;
+  }
+
+  .is-busy .selection::after {
+    opacity: 1;
+    background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, .44) 48%, transparent 76%);
+    background-size: 240% 100%;
+    animation: qr-selection-scan 900ms ease-in-out infinite;
+  }
+
+  .is-busy .selection {
+    box-shadow:
+      0 0 0 1px rgba(48, 16, 66, .65),
+      0 0 0 7px color-mix(in srgb, var(--qr-primary) 15%, transparent),
+      0 16px 50px rgba(19, 7, 25, .45);
   }
 
 
@@ -173,6 +240,7 @@ export const SNIPPER_STYLES = String.raw`
     border: 3px solid var(--qr-primary);
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(24, 8, 31, .28);
+    animation: qr-corner-enter 300ms var(--qr-emphasized-decelerate) both;
   }
 
   .corner.tl { top: -9px; left: -9px; border-radius: 9px 5px 5px 5px; }
@@ -192,6 +260,8 @@ export const SNIPPER_STYLES = String.raw`
     font-weight: 700;
     white-space: nowrap;
     transform: translateX(-50%);
+    box-shadow: 0 5px 16px color-mix(in srgb, var(--qr-primary) 20%, transparent);
+    animation: qr-label-enter 260ms var(--qr-emphasized-decelerate) 60ms both;
   }
 
   .result-card {
@@ -199,22 +269,39 @@ export const SNIPPER_STYLES = String.raw`
     top: 50%;
     left: 50%;
     display: none;
-    width: min(440px, calc(100vw - 32px));
+    width: min(520px, calc(100vw - 32px));
     max-height: calc(100vh - 40px);
     padding: 24px;
     overflow: auto;
     color: var(--qr-on-surface);
-    background: var(--qr-surface);
+    background:
+      radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--qr-primary-container) 32%, transparent), transparent 38%),
+      var(--qr-surface);
     border: 1px solid color-mix(in srgb, var(--qr-outline) 22%, transparent);
     border-radius: 32px 32px 32px 12px;
-    box-shadow: 0 18px 60px rgba(20, 9, 27, .38);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, white 48%, transparent) inset,
+      0 18px 60px rgba(20, 9, 27, .38),
+      0 4px 18px rgba(20, 9, 27, .2);
     cursor: default;
     transform: translate(-50%, -50%);
+    transform-origin: 50% 100%;
+    backdrop-filter: blur(24px);
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--qr-primary) 38%, transparent) transparent;
   }
 
   .result-card.visible {
     display: block;
-    animation: qr-result 320ms cubic-bezier(.2, .9, .2, 1);
+    animation: qr-result 480ms var(--qr-emphasized-decelerate) both;
+  }
+
+  .result-card.warning {
+    background:
+      radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--qr-warning-container) 48%, transparent), transparent 40%),
+      var(--qr-surface);
+    border-color: color-mix(in srgb, var(--qr-warning) 35%, var(--qr-outline));
+    border-radius: 28px 44px 28px 16px;
   }
 
   .result-heading {
@@ -222,6 +309,19 @@ export const SNIPPER_STYLES = String.raw`
     align-items: flex-start;
     gap: 14px;
   }
+
+  .result-card.visible .result-heading,
+  .result-card.visible .hostname-row:not([hidden]),
+  .result-card.visible .result-value:not([hidden]),
+  .result-card.visible .security-review:not([hidden]),
+  .result-card.visible .result-actions {
+    animation: qr-content-enter 380ms var(--qr-emphasized-decelerate) both;
+  }
+
+  .result-card.visible .hostname-row:not([hidden]) { animation-delay: 55ms; }
+  .result-card.visible .result-value:not([hidden]),
+  .result-card.visible .security-review:not([hidden]) { animation-delay: 95ms; }
+  .result-card.visible .result-actions { animation-delay: 145ms; }
 
   .status-icon {
     display: grid;
@@ -232,11 +332,15 @@ export const SNIPPER_STYLES = String.raw`
     color: var(--qr-on-primary-container);
     background: var(--qr-primary-container);
     border-radius: 16px 24px 16px 24px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--qr-primary) 20%, transparent);
+    transition: border-radius 300ms var(--qr-emphasized), transform 300ms var(--qr-emphasized);
   }
 
   .status-icon.error {
-    color: var(--qr-error);
-    background: color-mix(in srgb, var(--qr-error) 12%, var(--qr-surface));
+    color: var(--qr-on-warning-container);
+    background: var(--qr-warning-container);
+    border-radius: 24px 16px 24px 16px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--qr-warning) 24%, transparent);
   }
 
   .result-title {
@@ -268,7 +372,11 @@ export const SNIPPER_STYLES = String.raw`
     line-height: 1.55;
     overflow-wrap: anywhere;
     user-select: text;
+    border: 1px solid color-mix(in srgb, var(--qr-outline) 12%, transparent);
+    box-shadow: 0 1px 0 color-mix(in srgb, white 35%, transparent) inset;
   }
+
+  .result-value[hidden] { display: none; }
 
   .hostname-row {
     display: grid;
@@ -287,6 +395,120 @@ export const SNIPPER_STYLES = String.raw`
   .hostname-unicode { font-size: 16px; line-height: 1.35; }
   .hostname-ascii { color: var(--qr-on-surface-variant); font-size: 12px; }
   .hostname-row.same-hostname .hostname-ascii { display: none; }
+
+  .security-review {
+    display: grid;
+    gap: 12px;
+    margin: 18px 0 20px;
+    user-select: text;
+  }
+
+  .security-review[hidden] { display: none; }
+
+  .review-section {
+    display: grid;
+    gap: 7px;
+    padding: 14px 16px;
+    color: var(--qr-on-surface);
+    background: var(--qr-surface-container);
+    border: 1px solid color-mix(in srgb, var(--qr-outline) 14%, transparent);
+    border-radius: 18px 18px 18px 7px;
+    box-shadow: 0 1px 0 color-mix(in srgb, white 32%, transparent) inset;
+  }
+
+  .review-resolved-section {
+    background: color-mix(in srgb, var(--qr-primary-container) 38%, var(--qr-surface-container));
+    border-color: color-mix(in srgb, var(--qr-primary) 18%, transparent);
+    border-radius: 18px 7px 18px 18px;
+  }
+
+  .review-resolved-section[hidden] { display: none; }
+
+  .review-label {
+    color: var(--qr-on-surface-variant);
+    font-size: 11px;
+    font-weight: 780;
+    letter-spacing: .09em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .review-section code {
+    color: var(--qr-on-surface);
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .risk-panel {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    color: var(--qr-on-warning-container);
+    background: color-mix(in srgb, var(--qr-warning-container) 72%, var(--qr-surface));
+    border: 1px solid color-mix(in srgb, var(--qr-warning) 28%, transparent);
+    border-radius: 22px 22px 8px 22px;
+  }
+
+  .risk-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+  }
+
+  .risk-symbol {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    color: var(--qr-on-warning);
+    background: var(--qr-warning);
+    border-radius: 9px 13px 9px 13px;
+  }
+
+  .risk-symbol svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+  }
+
+  .risk-list {
+    display: grid;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .risk-list li {
+    display: grid;
+    grid-template-columns: 8px 1fr;
+    align-items: start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .risk-marker {
+    width: 7px;
+    height: 7px;
+    margin-top: 6px;
+    background: var(--qr-warning);
+    border-radius: 2px 5px 2px 5px;
+    transform: rotate(8deg);
+  }
+
+  .review-disclaimer {
+    margin: 0;
+    padding: 2px 4px 2px 13px;
+    color: var(--qr-on-surface-variant);
+    border-left: 3px solid color-mix(in srgb, var(--qr-warning) 52%, transparent);
+    font-size: 12px;
+    line-height: 1.5;
+  }
 
   .result-actions {
     display: flex;
@@ -309,20 +531,45 @@ export const SNIPPER_STYLES = String.raw`
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+      color 180ms var(--qr-standard),
+      background-color 180ms var(--qr-standard),
+      box-shadow 220ms var(--qr-emphasized),
+      transform 180ms var(--qr-emphasized),
+      border-radius 220ms var(--qr-emphasized);
   }
 
   .action-button:hover {
     background: color-mix(in srgb, var(--qr-primary) 9%, transparent);
+    border-radius: 16px 24px 16px 24px;
+    transform: translateY(-1px);
   }
 
   .action-button.filled {
     color: var(--qr-on-primary);
     background: var(--qr-primary);
+    box-shadow: 0 5px 14px color-mix(in srgb, var(--qr-primary) 28%, transparent);
+  }
+
+  .result-card.warning .action-button.filled {
+    color: var(--qr-on-warning);
+    background: var(--qr-warning);
+    box-shadow: 0 5px 14px color-mix(in srgb, var(--qr-warning) 28%, transparent);
   }
 
   .action-button.filled:hover {
     box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-primary) 34%, transparent);
     filter: brightness(1.06);
+  }
+
+  .result-card.warning .action-button.filled:hover {
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-warning) 38%, transparent);
+  }
+
+  .action-button:active {
+    transform: translateY(0) scale(.96);
   }
 
   .toast {
@@ -333,7 +580,7 @@ export const SNIPPER_STYLES = String.raw`
     padding: 12px 18px;
     color: var(--qr-surface);
     background: var(--qr-on-surface);
-    border-radius: 16px;
+    border-radius: 8px 18px 18px 18px;
     box-shadow: 0 8px 24px var(--qr-shadow);
     cursor: default;
     font-size: 13px;
@@ -343,23 +590,74 @@ export const SNIPPER_STYLES = String.raw`
 
   .toast.visible {
     display: block;
-    animation: qr-toast 180ms ease-out;
+    animation: qr-toast 300ms var(--qr-emphasized-decelerate);
   }
 
   @keyframes qr-enter {
-    from { opacity: 0; transform: translate(-50%, -12px) scale(.96); }
+    0% { opacity: 0; transform: translate(-50%, -20px) scale(.88, .82); border-radius: 38px; }
+    72% { opacity: 1; transform: translate(-50%, 2px) scale(1.02, .99); }
+    100% { transform: translateX(-50%) scale(1); }
   }
 
   @keyframes qr-result {
-    from { opacity: 0; transform: translate(-50%, -47%) scale(.92); border-radius: 40px; }
+    0% { opacity: 0; transform: translate(-50%, -42%) scale(.82, .76); border-radius: 48px; }
+    68% { opacity: 1; transform: translate(-50%, -51%) scale(1.015, 1.02); }
+    100% { transform: translate(-50%, -50%) scale(1); }
   }
 
   @keyframes qr-toast {
-    from { opacity: 0; transform: translate(-50%, 8px); }
+    0% { opacity: 0; transform: translate(-50%, 14px) scale(.88); }
+    72% { opacity: 1; transform: translate(-50%, -2px) scale(1.02); }
+    100% { transform: translateX(-50%) scale(1); }
   }
 
   @keyframes qr-selection {
-    from { opacity: 0; transform: scale(.98); }
+    0% { opacity: 0; transform: scale(.86); border-radius: 30px; }
+    75% { opacity: 1; transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes qr-app-enter {
+    from { opacity: 0; }
+  }
+
+  @keyframes qr-snapshot-settle {
+    from { opacity: .72; transform: scale(1.018); filter: brightness(.68) saturate(.86); }
+  }
+
+  @keyframes qr-scrim-in {
+    from { opacity: 0; }
+  }
+
+  @keyframes qr-mark-enter {
+    0% { opacity: 0; transform: rotate(-18deg) scale(.62); border-radius: 50%; }
+    72% { opacity: 1; transform: rotate(3deg) scale(1.08); }
+    100% { transform: rotate(0) scale(1); }
+  }
+
+  @keyframes qr-instruction-change {
+    0% { opacity: .35; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes qr-content-enter {
+    0% { opacity: 0; transform: translateY(12px) scale(.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes qr-corner-enter {
+    0% { opacity: 0; transform: scale(.4) rotate(-20deg); }
+    72% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  @keyframes qr-label-enter {
+    from { opacity: 0; transform: translate(-50%, -5px) scale(.85); }
+  }
+
+  @keyframes qr-selection-scan {
+    0% { background-position: 160% 0; }
+    100% { background-position: -80% 0; }
   }
 
   @media (prefers-color-scheme: dark) {
@@ -374,6 +672,10 @@ export const SNIPPER_STYLES = String.raw`
       --qr-on-surface: #e9e0e8;
       --qr-on-surface-variant: #cfc3cf;
       --qr-outline: #998d9a;
+      --qr-warning: #ffb95c;
+      --qr-on-warning: #452b00;
+      --qr-warning-container: #624000;
+      --qr-on-warning-container: #ffdea5;
       --qr-shadow: rgba(0, 0, 0, .54);
     }
   }
@@ -388,6 +690,7 @@ export const SNIPPER_STYLES = String.raw`
     *, *::before, *::after {
       animation-duration: .01ms !important;
       animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
       scroll-behavior: auto !important;
     }
   }

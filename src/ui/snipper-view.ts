@@ -9,10 +9,18 @@ export type ResultAction = Readonly<{
   onSelect: () => void;
 }>;
 
+export type SecurityReviewPresentation = Readonly<{
+  scannedValue: string;
+  resolvedDestination?: string;
+  warnings: readonly string[];
+  disclaimer: string;
+}>;
+
 export type ResultPresentation = Readonly<{
   title: string;
   subtitle: string;
   value: string;
+  review?: SecurityReviewPresentation;
   hostname?: Readonly<{ ascii: string; unicode: string }>;
   isWarning: boolean;
   actions: readonly ResultAction[];
@@ -101,7 +109,7 @@ export class SnipperView {
     if (!this.resultCard) return;
     this.resultCard.querySelector('.result-title')!.textContent = presentation.title;
     this.resultCard.querySelector('.result-subtitle')!.textContent = presentation.subtitle;
-    this.resultCard.querySelector('.result-value')!.textContent = presentation.value;
+    this.showResultContent(presentation);
     const hostname = this.resultCard.querySelector<HTMLElement>('.hostname-row')!;
     if (presentation.hostname) {
       hostname.hidden = false;
@@ -115,6 +123,7 @@ export class SnipperView {
     const status = this.resultCard.querySelector('.status-icon')!;
     status.innerHTML = presentation.isWarning ? ICONS.warning : ICONS.check;
     status.classList.toggle('error', presentation.isWarning);
+    this.resultCard.classList.toggle('warning', presentation.isWarning);
 
     const actions = this.resultCard.querySelector('.result-actions')!;
     actions.replaceChildren(...presentation.actions.map((action) => this.createActionButton(action)));
@@ -128,6 +137,9 @@ export class SnipperView {
     if (!instruction) return;
     instruction.querySelector('strong')!.textContent = title;
     instruction.querySelector('span')!.textContent = subtitle;
+    instruction.classList.remove('changed');
+    void (instruction as HTMLElement).offsetWidth;
+    instruction.classList.add('changed');
   }
 
   showToast(message: string): void {
@@ -208,6 +220,24 @@ export class SnipperView {
             <code class="hostname-ascii"></code>
           </div>
           <div class="result-value" tabindex="0"></div>
+          <div class="security-review" tabindex="0" hidden>
+            <section class="review-section">
+              <span class="review-label">Scanned value</span>
+              <code class="review-scanned-value"></code>
+            </section>
+            <section class="review-section review-resolved-section" hidden>
+              <span class="review-label">Resolved destination</span>
+              <code class="review-resolved-value"></code>
+            </section>
+            <section class="risk-panel">
+              <div class="risk-heading">
+                <span class="risk-symbol">${ICONS.warning}</span>
+                <strong>Why this needs care</strong>
+              </div>
+              <ul class="risk-list"></ul>
+            </section>
+            <p class="review-disclaimer"></p>
+          </div>
           <div class="result-actions"></div>
         </section>
         <div class="toast" role="status" aria-live="polite"></div>
@@ -223,5 +253,42 @@ export class SnipperView {
     button.querySelector('span')!.textContent = action.label;
     button.addEventListener('click', action.onSelect);
     return button;
+  }
+
+  private showResultContent(presentation: ResultPresentation): void {
+    const value = this.resultCard!.querySelector<HTMLElement>('.result-value')!;
+    const review = this.resultCard!.querySelector<HTMLElement>('.security-review')!;
+
+    if (!presentation.review) {
+      value.hidden = false;
+      value.textContent = presentation.value;
+      review.hidden = true;
+      return;
+    }
+
+    value.hidden = true;
+    review.hidden = false;
+    review.querySelector<HTMLElement>('.review-scanned-value')!.textContent = presentation.review.scannedValue;
+    review.querySelector<HTMLElement>('.review-disclaimer')!.textContent = presentation.review.disclaimer;
+
+    const resolvedSection = review.querySelector<HTMLElement>('.review-resolved-section')!;
+    if (presentation.review.resolvedDestination) {
+      resolvedSection.hidden = false;
+      resolvedSection.querySelector<HTMLElement>('.review-resolved-value')!.textContent = presentation.review.resolvedDestination;
+    } else {
+      resolvedSection.hidden = true;
+    }
+
+    const riskList = review.querySelector<HTMLUListElement>('.risk-list')!;
+    riskList.replaceChildren(...presentation.review.warnings.map((warning) => {
+      const item = document.createElement('li');
+      const marker = document.createElement('span');
+      marker.className = 'risk-marker';
+      marker.setAttribute('aria-hidden', 'true');
+      const message = document.createElement('span');
+      message.textContent = warning;
+      item.append(marker, message);
+      return item;
+    }));
   }
 }

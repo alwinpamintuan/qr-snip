@@ -106,16 +106,19 @@ export class SnipperApplication {
 
   private previewSuspiciousLink(result: ClassifiedResult, assessment: LinkSecurityAssessment): void {
     const url = result.openUrl!;
-    const explanation = assessment.risks.map((risk) => `• ${risk.message}`).join('\n');
-    const resolvedDestination = result.value === url ? '' : `\n\nResolved destination\n${url}`;
-    const review = displayPayload(
-      `Scanned value\n${result.value}${resolvedDestination}\n\nWhy this needs care\n${explanation}`
-      + '\n\nThese signals do not prove the link is malicious.',
-    );
+    const scannedValue = displayPayload(result.value);
+    const resolvedDestination = displayPayload(url);
+    const contentWasTruncated = scannedValue.truncated || resolvedDestination.truncated;
     this.view.showResult({
       title: 'Check this destination',
-      subtitle: `${assessment.risks.length} warning ${assessment.risks.length === 1 ? 'signal' : 'signals'} · nothing has opened${review.truncated ? ' · long value' : ''}`,
-      value: review.text,
+      subtitle: `${assessment.risks.length} warning ${assessment.risks.length === 1 ? 'signal' : 'signals'} · nothing has opened${contentWasTruncated ? ' · long value' : ''}`,
+      value: scannedValue.text,
+      review: {
+        scannedValue: scannedValue.text,
+        ...(result.value === url ? {} : { resolvedDestination: resolvedDestination.text }),
+        warnings: assessment.risks.map((risk) => risk.message),
+        disclaimer: 'These signals do not prove the link is malicious. Check the destination before continuing.',
+      },
       hostname: assessment.hostname,
       isWarning: true,
       actions: [
