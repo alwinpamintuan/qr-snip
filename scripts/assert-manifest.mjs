@@ -20,15 +20,16 @@ for (const target of targets) {
   if (manifest.externally_connectable) {
     throw new Error(`${target} unexpectedly enables external messaging.`);
   }
-  const workerResources = (manifest.web_accessible_resources ?? [])
-    .flatMap((entry) => entry.resources ?? []);
-  if (!workerResources.includes('assets/qr-decoder.worker-*.js')) {
-    throw new Error(`${target} does not expose the decoder worker to the runtime-injected content script.`);
+  if ((manifest.web_accessible_resources ?? []).length > 0) {
+    throw new Error(`${target} unexpectedly exposes extension resources to host pages.`);
   }
 
   const contentBundle = await readFile(resolve('.output', target, 'content-scripts', 'snipper.js'), 'utf8');
-  if (!contentBundle.includes('runtime.getURL')) {
-    throw new Error(`${target} content bundle does not resolve the decoder worker through runtime.getURL.`);
+  if (!contentBundle.includes('createObjectURL') || !contentBundle.includes('Blob')) {
+    throw new Error(`${target} content bundle does not contain the inline decoder worker bootstrap.`);
+  }
+  if (contentBundle.includes('/assets/qr-decoder.worker-')) {
+    throw new Error(`${target} content bundle still references a cross-origin decoder worker asset.`);
   }
 }
 

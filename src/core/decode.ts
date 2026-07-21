@@ -1,7 +1,6 @@
 import type { PixelCrop } from './selection';
 import { constrainedDimensions } from './decode-pipeline';
-import decoderWorkerAssetUrl from '../workers/qr-decoder.worker.ts?worker&url';
-import type { PublicPath } from 'wxt/browser';
+import DecoderWorker from '../workers/qr-decoder.worker.ts?worker&inline';
 
 export type DecodeOutcome =
   | Readonly<{ ok: true; value: string }>
@@ -86,10 +85,7 @@ export class WorkerQrDecoder implements QrDecoder {
   }
 
   private getWorker(): Worker {
-    const assetPath = decoderWorkerAssetUrl.startsWith('/')
-      ? decoderWorkerAssetUrl.slice(1)
-      : decoderWorkerAssetUrl;
-    this.worker ??= new Worker(browser.runtime.getURL(assetPath as PublicPath), { type: 'module' });
+    this.worker ??= new DecoderWorker();
     return this.worker;
   }
 }
