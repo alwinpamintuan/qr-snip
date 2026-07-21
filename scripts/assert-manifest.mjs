@@ -20,6 +20,16 @@ for (const target of targets) {
   if (manifest.externally_connectable) {
     throw new Error(`${target} unexpectedly enables external messaging.`);
   }
+  const workerResources = (manifest.web_accessible_resources ?? [])
+    .flatMap((entry) => entry.resources ?? []);
+  if (!workerResources.includes('assets/qr-decoder.worker-*.js')) {
+    throw new Error(`${target} does not expose the decoder worker to the runtime-injected content script.`);
+  }
+
+  const contentBundle = await readFile(resolve('.output', target, 'content-scripts', 'snipper.js'), 'utf8');
+  if (!contentBundle.includes('runtime.getURL')) {
+    throw new Error(`${target} content bundle does not resolve the decoder worker through runtime.getURL.`);
+  }
 }
 
 console.log(`Verified least-privilege manifests for ${targets.join(' and ')}.`);

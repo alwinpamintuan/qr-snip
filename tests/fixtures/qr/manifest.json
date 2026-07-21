@@ -1542,6 +1542,17 @@
       "license": "CC0-1.0"
     },
     {
+      "id": "reported-sample-2026-07-21",
+      "path": "generated/positive-reported-sample-2026-07-21.png",
+      "expectedPayload": "http://en.m.wikipedia.org",
+      "version": 2,
+      "errorCorrection": "M",
+      "quietZone": 4,
+      "transform": "reported-sample-size",
+      "source": "Deterministically regenerated from reported payload and dimensions",
+      "license": "CC0-1.0"
+    },
+    {
       "id": "positive-screen-1080p-1x",
       "path": "generated/positive-screen-1080p-1x.png",
       "expectedPayload": "https://example.com/screen/1080p-1x",

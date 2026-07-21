@@ -1,0 +1,7 @@
+{
+  "id": "reported-sample-2026-07-21",
+  "width": 225,
+  "height": 225,
+  "expectedPayload": "http://en.m.wikipedia.org",
+  "note": "Payload and dimensions from the user-reported image; the image itself remains outside the repository."
+}

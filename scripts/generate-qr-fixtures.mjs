@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import QRCode from 'qrcode';
 import { PNG } from 'pngjs';
@@ -45,6 +45,26 @@ for (let seed = 0; seed < 20; seed += 1) {
     });
   }
 }
+
+const reportedSample = JSON.parse(await readFile(resolve(root, 'sample-regression.json'), 'utf8'));
+const reportedImage = PNG.sync.read(await QRCode.toBuffer(reportedSample.expectedPayload, {
+  errorCorrectionLevel: 'M',
+  margin: 4,
+  width: reportedSample.width,
+}));
+const reportedPath = `generated/positive-${reportedSample.id}.png`;
+await writePng(resolve(root, reportedPath), reportedImage);
+positives.push({
+  id: reportedSample.id,
+  path: reportedPath,
+  expectedPayload: reportedSample.expectedPayload,
+  version: QRCode.create(reportedSample.expectedPayload, { errorCorrectionLevel: 'M' }).version,
+  errorCorrection: 'M',
+  quietZone: 4,
+  transform: 'reported-sample-size',
+  source: 'Deterministically regenerated from reported payload and dimensions',
+  license: 'CC0-1.0',
+});
 
 const compositeSpecs = [
   ['1080p-1x', 1920, 1080, 1],
