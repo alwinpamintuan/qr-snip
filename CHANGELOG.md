@@ -20,6 +20,7 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Reduced activation work by removing duplicate decoder code, overlapping capture with dormant injection, and reusing injected listeners
 - Prioritized drag selection with a compact keyboard alternative, contextual shortcut keycap, and lighter entrance effects
 - Split the fast `pnpm check` development loop from the comprehensive `pnpm check:full` browser and packaging gate
+- Normalized Preferences spacing and typography while reducing control and onboarding-card geometry
 
 ## [0.1.0] - 2026-07-22
 

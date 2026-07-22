@@ -82,7 +82,31 @@ test('onboarding explains the privacy model and options persist locally', async 
   await expect(options.getByLabel('Show decoder diagnostics')).toBeChecked();
   await options.goto(`chrome-extension://${extensionId}/options.html`);
   await expect(options.getByRole('heading', { name: 'Before your first scan' })).toHaveCount(0);
+  const metrics = await options.evaluate(() => ({
+    helperFontSizes: [...document.querySelectorAll('.field small, .privacy-note span')]
+      .map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+    rowPadding: [...document.querySelectorAll('.field')]
+      .map((element) => `${getComputedStyle(element).paddingBlockStart} ${getComputedStyle(element).paddingBlockEnd}`),
+    controlHeights: [...document.querySelectorAll('select, button')]
+      .map((element) => element.getBoundingClientRect().height),
+    switchSize: (() => {
+      const switchElement = document.querySelector('.toggle-field i')!;
+      const bounds = switchElement.getBoundingClientRect();
+      return { width: bounds.width, height: bounds.height };
+    })(),
+  }));
+  expect(metrics.helperFontSizes.every((size) => size >= 16)).toBe(true);
+  expect(new Set(metrics.rowPadding)).toEqual(new Set(['12px 12px']));
+  expect(metrics.controlHeights.every((height) => height <= 40)).toBe(true);
+  expect(metrics.switchSize).toEqual({ width: 44, height: 28 });
   await testInfo.attach('settings-dark', {
+    body: await options.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
+  await options.setViewportSize({ width: 360, height: 800 });
+  await expect(options.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
+  expect(await options.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await testInfo.attach('settings-dark-narrow', {
     body: await options.screenshot({ fullPage: true }),
     contentType: 'image/png',
   });
