@@ -34,7 +34,7 @@ Safari is not currently supported. The WebExtension architecture should preserve
 - Desktop users encountering QR-first links or instructions
 - Support and QA teams validating QR destinations
 - Security-conscious users who want to inspect links without uploading screenshots
-- Keyboard-heavy users who need a quick extension shortcut, while selection remains pointer-driven
+- Keyboard-heavy users who need a shortcut-driven, pointer-free scan workflow
 
 ### Core scenarios
 
@@ -52,7 +52,7 @@ Safari is not currently supported. The WebExtension architecture should preserve
 - Toolbar action and configurable browser shortcut
 - Visible-tab PNG capture after an explicit user gesture
 - Runtime-only content-script injection
-- Frozen-screen pointer selection with dimensions and clear corner affordances
+- Frozen-screen pointer or keyboard selection with dimensions and clear corner affordances
 - Crop mapping across device pixel ratio, browser zoom, and viewport size
 - Worker-based local QR decoding with normal, inverted, bounded-downscale, and small-code retry behavior
 - URL, email, phone, and text classification
@@ -73,8 +73,7 @@ Safari is not currently supported. The WebExtension architecture should preserve
 - Camera input
 - Image-file upload or drop
 - Context-menu activation
-- Localization beyond English
-- Keyboard-controlled selection geometry
+- Localization beyond the English foundation
 - Safari packaging
 
 These are separate product decisions, not defects in the current workflow. Styled-QR and barcode proposals are detailed in [ROADMAP.md](ROADMAP.md).
@@ -91,7 +90,7 @@ After toolbar or shortcut activation, the background captures the visible tab an
 
 ### State C — selecting
 
-The captured frame is frozen and dimmed. A floating instruction pill says “Drag around a QR code.” Pointer drag reveals a rounded selection with a live width × height label. Escape and the close button cancel.
+The captured frame is frozen and dimmed. A floating instruction pill says “Drag around a QR code,” and a visible Keyboard selection action creates a centered rectangle. Pointer drag reveals a rounded selection with a live width × height label. In keyboard mode, arrows move, Shift+Arrow resizes, Alt increases the step, Enter scans, and a throttled live region announces geometry. Escape and the close button cancel.
 
 ### State D — decoding
 

@@ -4,11 +4,14 @@ import { toPixelCrop, type SelectionRect } from '../core/selection';
 import type { MessageKey, Translator } from '../i18n/messages';
 import { assessLinkSecurity, type LinkRisk, type LinkSecurityAssessment } from '../security/link-security';
 import { toUnicode } from 'punycode';
+import { KeyboardSelection } from '../ui/keyboard-selection';
 import { SelectionGesture } from '../ui/selection-gesture';
 import { SnipperView } from '../ui/snipper-view';
 
 export class SnipperApplication {
   private gesture: SelectionGesture | null = null;
+  private keyboardSelection: KeyboardSelection | null = null;
+  private keyboardMode = false;
   private screenshotUrl = '';
   private invocationId = '';
   private decodeController: AbortController | null = null;
@@ -25,13 +28,25 @@ export class SnipperApplication {
     this.screenshotUrl = screenshotUrl;
     this.view.mount(screenshotUrl, {
       onClose: () => this.destroy(),
+      onKeyboardSelection: () => this.beginKeyboardSelection(),
       onSnapshotReady: () => this.onSnapshotReady(),
       onSnapshotError: () => this.showDecodeFailure('image-error'),
     });
     this.gesture = new SelectionGesture(this.view.selectionSurface, {
-      onChange: (selection) => this.view.showSelection(selection),
+      onChange: (selection) => {
+        this.keyboardMode = false;
+        this.keyboardSelection?.cancel();
+        this.view.showSelection(selection);
+      },
       onComplete: (selection) => void this.scan(selection),
       onInvalid: () => this.rejectSmallSelection(),
+    });
+    this.keyboardSelection = new KeyboardSelection({
+      onChange: (selection) => {
+        this.view.showSelection(selection);
+        this.view.announceSelection(selection);
+      },
+      onComplete: (selection) => void this.scan(selection),
     });
     window.addEventListener('keydown', this.onKeyDown, true);
   }
@@ -43,6 +58,9 @@ export class SnipperApplication {
     this.decoder.destroy();
     this.gesture?.detach();
     this.gesture = null;
+    this.keyboardSelection?.cancel();
+    this.keyboardSelection = null;
+    this.keyboardMode = false;
     this.invocationId = '';
     this.screenshotUrl = '';
     this.view.unmount();
@@ -50,7 +68,9 @@ export class SnipperApplication {
 
   private onSnapshotReady(): void {
     this.gesture?.attach();
+    this.view.enableKeyboardSelection();
     this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
+    this.view.focusKeyboardAction();
   }
 
   private async scan(selection: SelectionRect): Promise<void> {
@@ -179,7 +199,22 @@ export class SnipperApplication {
     this.gesture?.cancel();
     this.view.resetSelection();
     this.view.setBusy(false);
-    this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
+    if (this.keyboardMode) {
+      this.beginKeyboardSelection();
+    } else {
+      this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
+      this.view.focusKeyboardAction();
+    }
+  }
+
+  private beginKeyboardSelection(): void {
+    if (!this.view.snapshotIsReady) return;
+    this.keyboardMode = true;
+    this.gesture?.cancel();
+    this.view.resetSelection();
+    this.view.setInstruction(this.t('keyboardSelectionStarted'), this.t('keyboardSelectionHint'));
+    this.keyboardSelection?.start({ width: window.innerWidth, height: window.innerHeight });
+    this.view.focusSelectionSurface();
   }
 
   private displayPayload(value: string): Readonly<{ text: string; truncated: boolean }> {
@@ -209,9 +244,19 @@ export class SnipperApplication {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape') return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.destroy();
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.destroy();
+      return;
+    }
+    const handled = this.keyboardSelection?.handleKeyDown(event, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    }) ?? false;
+    if (handled) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   };
 }

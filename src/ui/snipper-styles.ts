@@ -126,14 +126,15 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
 
   .icon-button {
     display: grid;
-    width: 40px;
-    height: 40px;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     place-items: center;
     color: var(--qr-on-surface-variant);
     background: transparent;
     border: 0;
-    border-radius: 20px;
+    border-radius: var(--qr-shapes-button);
     cursor: pointer;
     transition:
       color var(--qr-motion-fast) var(--qr-motion-standard),
@@ -528,6 +529,23 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     box-shadow: 0 5px 14px color-mix(in srgb, var(--qr-primary) 28%, transparent);
   }
 
+  .action-button.tonal {
+    color: var(--qr-on-primary-container);
+    background: var(--qr-primary-container);
+  }
+
+  .keyboard-action {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding-inline: 14px;
+    white-space: nowrap;
+  }
+
+  .keyboard-action:disabled {
+    opacity: .48;
+    pointer-events: none;
+  }
+
   .result-card.warning .action-button.filled {
     color: var(--qr-on-warning);
     background: var(--qr-warning);
@@ -654,6 +672,8 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     .top-bar { top: 12px; width: calc(100vw - 24px); }
     .instruction { min-width: 0; flex: 1; }
     .instruction span { display: none; }
+    .keyboard-action { width: 44px; padding: 0; }
+    .keyboard-action span { position: fixed; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .result-card { padding: 20px; border-radius: 28px 28px 28px 10px; }
     .result-actions { display: grid; grid-template-columns: 1fr 1fr; }
     .action-button:last-child:nth-child(odd) { grid-column: 1 / -1; }

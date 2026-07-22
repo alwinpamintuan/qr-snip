@@ -129,6 +129,7 @@ Application cleanup aborts active decoding, terminates the worker, detaches poin
 ### UI and worker modules
 
 - `src/ui/selection-gesture.ts`: pointer capture and selection callbacks; it contains no decoding or navigation decisions.
+- `src/ui/keyboard-selection.ts`: keyboard command adapter over the shared pure selection geometry; it contains no decoding or presentation decisions.
 - `src/ui/snipper-view.ts`: closed Shadow DOM construction, accessible status/result rendering, actions, toast, and contained copy fallback.
 - `src/ui/snipper-styles.ts`: Material 3 Expressive colors, shapes, layout, state layers, responsive behavior, and motion preferences.
 - `src/ui/icons.ts`: trusted internal SVG icon markup. Decoded values never enter this path.

@@ -120,7 +120,10 @@ The post-1.0 styled-code corpus is specified in [ROADMAP.md](ROADMAP.md). Every 
 ## Accessibility checks
 
 - Escape closes the selection and result states.
+- The Keyboard selection action receives focus after activation; arrows move, Shift+Arrow resizes, Alt changes the step, and Enter scans.
+- Selection geometry announcements are understandable and throttled with NVDA and VoiceOver.
 - Result controls are reachable in a logical order and focus moves into the dialog.
+- Tab and Shift+Tab remain contained within the result dialog, and retry returns focus to the active selection mode.
 - Focus indicators remain visible on all surfaces.
 - Screen-reader output is checked with NVDA on Firefox/Chrome and VoiceOver on Chrome/Firefox.
 - Control targets are at least 44 × 44 CSS pixels.
@@ -130,7 +133,7 @@ The post-1.0 styled-code corpus is specified in [ROADMAP.md](ROADMAP.md). Every 
 - `prefers-reduced-motion` removes non-essential animation.
 - Pointer capture works with mouse, pen, and touch emulation.
 
-Pointer dragging is currently required to define the selection. Do not claim complete WCAG 2.2 AA operability until keyboard-controlled selection is implemented and tested.
+Keyboard-controlled selection is implemented and covered at the pure geometry and adapter boundaries. Do not claim complete WCAG 2.2 AA conformance until the screen-reader and supported-browser checks above are recorded manually.
 
 ## Performance and memory
 

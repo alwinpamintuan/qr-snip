@@ -30,6 +30,7 @@ export type ResultPresentation = Readonly<{
 
 export type SnipperViewCallbacks = Readonly<{
   onClose: () => void;
+  onKeyboardSelection: () => void;
   onSnapshotReady: () => void;
   onSnapshotError: () => void;
 }>;
@@ -43,6 +44,8 @@ export class SnipperView {
   private toast: HTMLElement | null = null;
   private screenshotUrl = '';
   private toastTimer: number | null = null;
+  private announcementTimer: number | null = null;
+  private returnFocus: HTMLElement | null = null;
 
   constructor(private readonly i18n: I18n) {}
 
@@ -87,6 +90,8 @@ export class SnipperView {
     this.screenshot?.addEventListener('error', callbacks.onSnapshotError, { once: true });
     if (this.screenshot) this.screenshot.src = screenshotUrl;
     this.root.querySelector('[data-action="close"]')?.addEventListener('click', callbacks.onClose);
+    this.root.querySelector('[data-action="keyboard"]')?.addEventListener('click', callbacks.onKeyboardSelection);
+    this.resultCard?.addEventListener('keydown', this.onResultKeyDown);
   }
 
   showSelection(rect: SelectionRect): void {
@@ -100,13 +105,17 @@ export class SnipperView {
       backgroundPosition: `${-rect.x}px ${-rect.y}px`,
     });
     this.selection.classList.add('visible');
+    this.selection.setAttribute('aria-hidden', 'false');
     const label = this.selection.querySelector('.selection-label');
     if (label) label.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
   }
 
   resetSelection(): void {
     this.selection?.classList.remove('visible');
+    this.selection?.setAttribute('aria-hidden', 'true');
     this.resultCard?.classList.remove('visible');
+    this.returnFocus?.focus();
+    this.returnFocus = null;
   }
 
   showResult(presentation: ResultPresentation): void {
@@ -130,6 +139,7 @@ export class SnipperView {
 
     const actions = this.resultCard.querySelector('.result-actions')!;
     actions.replaceChildren(...presentation.actions.map((action) => this.createActionButton(action)));
+    this.returnFocus = this.root?.activeElement instanceof HTMLElement ? this.root.activeElement : null;
     this.resultCard.classList.add('visible');
     this.resultCard.querySelector<HTMLButtonElement>('button')?.focus();
     this.setInstruction(presentation.title, presentation.subtitle);
@@ -153,6 +163,31 @@ export class SnipperView {
     this.toastTimer = window.setTimeout(() => this.toast?.classList.remove('visible'), 1800);
   }
 
+  enableKeyboardSelection(): void {
+    const button = this.root?.querySelector<HTMLButtonElement>('[data-action="keyboard"]');
+    if (button) button.disabled = false;
+  }
+
+  focusKeyboardAction(): void {
+    this.root?.querySelector<HTMLButtonElement>('[data-action="keyboard"]')?.focus();
+  }
+
+  focusSelectionSurface(): void {
+    this.selectionSurface.focus();
+  }
+
+  announceSelection(rect: SelectionRect): void {
+    if (this.announcementTimer !== null) window.clearTimeout(this.announcementTimer);
+    this.announcementTimer = window.setTimeout(() => {
+      const liveRegion = this.root?.querySelector<HTMLElement>('.selection-live');
+      if (!liveRegion) return;
+      liveRegion.textContent = this.i18n.t('selectionAnnouncement', [
+        String(Math.round(rect.x)), String(Math.round(rect.y)),
+        String(Math.round(rect.width)), String(Math.round(rect.height)),
+      ]);
+    }, 160);
+  }
+
   setBusy(busy: boolean): void {
     this.selectionSurface.classList.toggle('is-busy', busy);
     this.resultCard?.setAttribute('aria-busy', String(busy));
@@ -172,6 +207,8 @@ export class SnipperView {
 
   unmount(): void {
     if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
+    if (this.announcementTimer !== null) window.clearTimeout(this.announcementTimer);
+    this.resultCard?.removeEventListener('keydown', this.onResultKeyDown);
     this.host?.remove();
     this.host = null;
     this.root = null;
@@ -179,6 +216,7 @@ export class SnipperView {
     this.selection = null;
     this.resultCard = null;
     this.toast = null;
+    this.returnFocus = null;
   }
 
   private installStyles(): void {
@@ -197,7 +235,7 @@ export class SnipperView {
   private createLayout(): DocumentFragment {
     const template = document.createElement('template');
     template.innerHTML = `
-      <main class="qr-snip-app" role="application">
+      <main class="qr-snip-app" role="application" tabindex="-1">
         <img class="snapshot" alt="" draggable="false">
         <div class="scrim"></div>
         <header class="top-bar">
@@ -205,6 +243,7 @@ export class SnipperView {
           <span class="instruction" aria-live="polite">
             <strong></strong><span></span>
           </span>
+          <span data-component="keyboard"></span>
           <span data-component="close"></span>
         </header>
         <div class="selection" role="region" aria-hidden="true">
@@ -212,6 +251,7 @@ export class SnipperView {
           <span class="corner bl"></span><span class="corner br"></span>
           <span class="selection-label"></span>
         </div>
+        <div class="selection-live visually-hidden" aria-live="polite" aria-atomic="true"></div>
         <section class="result-card" role="dialog" aria-modal="true" aria-labelledby="qr-result-title">
           <div class="result-heading">
             <span class="status-icon"></span>
@@ -260,6 +300,11 @@ export class SnipperView {
     fragment.querySelector<HTMLElement>('.risk-heading strong')!.textContent = t('riskHeading');
     fragment.querySelector('[data-icon="qr"]')?.append(createIcon('qr'));
     fragment.querySelector('[data-icon="warning"]')?.append(createIcon('warning'));
+    const keyboardButton = createButtonPrimitive(t('keyboardSelectionAction'), 'tonal', () => undefined, 'keyboard');
+    keyboardButton.dataset.action = 'keyboard';
+    keyboardButton.classList.add('keyboard-action');
+    keyboardButton.disabled = true;
+    fragment.querySelector('[data-component="keyboard"]')?.replaceWith(keyboardButton);
     fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton(t('cancelSnipLabel'), 'close', 'close'));
     return fragment;
   }
@@ -304,4 +349,20 @@ export class SnipperView {
       return item;
     }));
   }
+
+  private readonly onResultKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab' || !this.resultCard?.classList.contains('visible')) return;
+    const controls = [...this.resultCard.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+    if (controls.length === 0) return;
+    const first = controls[0]!;
+    const last = controls[controls.length - 1]!;
+    const active = this.root?.activeElement;
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 }
