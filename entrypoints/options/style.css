@@ -56,7 +56,7 @@ h3 { margin-bottom: var(--space-1); font-size: 1rem; line-height: 1.4; }
 .settings { padding-bottom: var(--space-4); border-bottom: 1px solid color-mix(in srgb, var(--outline) 25%, transparent); }
 .field { display: flex; min-height: 72px; gap: var(--space-5); align-items: center; justify-content: space-between; padding: var(--space-3) 0; border-top: 1px solid color-mix(in srgb, var(--outline) 25%, transparent); cursor: pointer; }
 .field > span { display: grid; gap: var(--space-1); }
-.field small { max-width: 560px; color: var(--on-surface-variant); font-size: 1rem; line-height: 1.5; }
+.field small { max-width: 560px; color: var(--on-surface-variant); font-size: 12px; line-height: 1.5; }
 select, button { min-height: 40px; border: 1px solid var(--outline); border-radius: var(--space-3); padding: 0 var(--space-3); background: var(--surface-high); color: var(--on-surface); font: inherit; font-weight: 650; }
 select:focus-visible, button:focus-visible, input:focus-visible + i { outline: 3px solid color-mix(in srgb, var(--primary) 52%, transparent); outline-offset: 2px; }
 .toggle-field { position: relative; }
@@ -67,7 +67,7 @@ select:focus-visible, button:focus-visible, input:focus-visible + i { outline: 3
 .toggle-field input:checked + i::after { transform: translateX(16px); background: var(--on-primary); }
 [dir="rtl"] .toggle-field input:checked + i::after { transform: translateX(-16px); }
 .privacy-note { display: grid; gap: var(--space-1); margin: var(--space-4) 0; padding: var(--space-4); border-radius: var(--space-4) var(--space-4) var(--space-4) var(--space-1); background: var(--primary-container); color: var(--on-primary-container); }
-.privacy-note span { font-size: 1rem; line-height: 1.5; }
+.privacy-note span { font-size: 12px; line-height: 1.5; }
 .reset-button { cursor: pointer; }
 .reset-button:hover { background: color-mix(in srgb, var(--primary) 12%, var(--surface-high)); }
 @media (max-width: 640px) {

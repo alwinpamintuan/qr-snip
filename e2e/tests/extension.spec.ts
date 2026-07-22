@@ -95,7 +95,7 @@ test('onboarding explains the privacy model and options persist locally', async 
       return { width: bounds.width, height: bounds.height };
     })(),
   }));
-  expect(metrics.helperFontSizes.every((size) => size >= 16)).toBe(true);
+  expect(metrics.helperFontSizes.every((size) => size === 12)).toBe(true);
   expect(new Set(metrics.rowPadding)).toEqual(new Set(['12px 12px']));
   expect(metrics.controlHeights.every((height) => height <= 40)).toBe(true);
   expect(metrics.switchSize).toEqual({ width: 44, height: 28 });
