@@ -1,21 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { classifyResult, displayPayload, isAllowedOpenUrl, normalizePayload } from '../src/core/result';
+import { displayPayload, isAllowedOpenUrl, normalizePayload } from '../src/core/result';
+import { interpretResult } from '../src/core/interpreters/registry';
 
 describe('QR result handling', () => {
   it('recognizes secure and insecure web links', () => {
-    expect(classifyResult('https://example.com/path').kind).toBe('url');
-    expect(classifyResult('http://example.com').openUrl).toBe('http://example.com/');
+    expect(interpretResult('https://example.com/path').kind).toBe('url');
+    expect(interpretResult('http://example.com').openUrl).toBe('http://example.com/');
   });
 
   it('turns plain email addresses into mail links', () => {
-    expect(classifyResult('hello@example.com')).toMatchObject({
+    expect(interpretResult('hello@example.com')).toMatchObject({
       kind: 'email',
       openUrl: 'mailto:hello@example.com',
     });
   });
 
   it('keeps ordinary payloads as text', () => {
-    const result = classifyResult('WIFI:T:WPA;S:Guest;P:secret;;');
+    const result = interpretResult('unrecognized:value');
     expect(result.kind).toBe('text');
     expect(result).not.toHaveProperty('openUrl');
   });
@@ -47,6 +48,6 @@ describe('QR result handling', () => {
     const displayed = displayPayload(value);
     expect(displayed.truncated).toBe(true);
     expect(displayed.text.length).toBeLessThan(value.length);
-    expect(classifyResult(value).value).toBe(value);
+    expect(interpretResult(value).value).toBe(value);
   });
 });

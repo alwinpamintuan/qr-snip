@@ -48,6 +48,7 @@ class DeterministicDecoder implements QrDecoder {
     const scenario = query.get('scenario') ?? 'happy';
     if (scenario === 'not-found') return { ok: false, reason: 'not-found' };
     if (scenario === 'suspicious') return { ok: true, value: 'http://user:pass@192.168.1.4:8080/path' };
+    if (scenario === 'wifi') return { ok: true, value: 'WIFI:T:WPA;S:Guest network;P:local-secret;H:false;;' };
     return { ok: true, value: 'https://example.com/qr-snip' };
   }
 

@@ -72,6 +72,7 @@ Do not describe browser coverage, performance, memory behavior, or security revi
 | Generated browser permissions and worker packaging | `scripts/assert-manifest.mjs` |
 | Settings defaults, validation, and migration | `tests/settings.test.ts` |
 | First-run education and options persistence | `e2e/tests/extension.spec.ts` |
+| Result registry, structured summaries, and malformed fallback | `tests/result-interpreters.test.ts` |
 | Chromium extension action/reinvocation and component states | `e2e/tests/extension.spec.ts` |
 | Chromium/Firefox critical and accessibility flows | `e2e/tests/flow.spec.ts` |
 | Hostile and mutating page surfaces | `e2e/tests/fixture-gallery.spec.ts` |
@@ -180,7 +181,7 @@ Investigate a representative 500 × 500 decode above 300 ms, a page main-thread 
 Follow the full checklist in [SECURITY.md](SECURITY.md). At minimum, each release must confirm:
 
 - decoded values use inactive text rendering;
-- dangerous protocols fail in classification and at the background boundary;
+- dangerous protocols fail in interpretation and at the background boundary;
 - no preview, warning, or decode path triggers navigation;
 - screenshots and payloads do not appear in logs or storage;
 - runtime bundles contain no unreviewed network or analytics code;

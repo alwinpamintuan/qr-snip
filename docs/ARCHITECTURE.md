@@ -121,7 +121,7 @@ A guarded global `SnipperApplication` instance prevents duplicate message listen
 - owns invocation and screenshot lifetime;
 - starts and cancels decode requests;
 - translates selection rectangles into screenshot crops;
-- classifies decoded payloads;
+- delegates decoded payloads through the ordered interpreter registry;
 - requests link-security assessment;
 - chooses result, warning, and failure presentations; and
 - sends an Open request only after a user action.
@@ -135,7 +135,8 @@ Application cleanup aborts active decoding, terminates the worker, detaches poin
 - `src/core/selection.ts`: normalized pointer rectangles, minimum selection size, clamping, and CSS-to-image coordinate mapping.
 - `src/core/decode.ts`: `QrDecoder` contract, image/canvas adapter, resource-constrained crop, transferable-buffer worker client, cancellation, and typed outcomes.
 - `src/core/decode-pipeline.ts`: worker-only RGBA validation, decode retry policy, scaling, and `jsQR` invocation.
-- `src/core/result.ts`: payload normalization, size limits, URL/email/phone/text classification, display truncation, and protocol allow list.
+- `src/core/result.ts`: payload normalization, size limits, display truncation, and protocol allow list.
+- `src/core/interpreters/`: pure interpreter contract, ordered registry, generic actionable types, and inactive structured previews.
 - `src/security/link-security.ts`: deterministic, side-effect-free HTTP(S) warning assessment and hostname presentation.
 
 ### UI and worker modules
@@ -228,7 +229,7 @@ Treat failed capture or injection on a privileged page as an expected platform r
 5. The RGBA buffer transfers to the inline worker rather than being cloned.
 6. The worker returns a decoded string or local failure category.
 7. `destroy()` aborts work, terminates the worker, removes the host, and clears references.
-8. No storage or network API is requested or called.
+8. No page-derived data is written to storage or sent over the network.
 
 Do not retain data for diagnostics. Tests and logs may identify synthetic fixture IDs but must not emit image buffers or decoded real-world values.
 
@@ -237,8 +238,6 @@ Do not retain data for diagnostics. Tests and logs may identify synthetic fixtur
 Planned boundaries include:
 
 - a composite decoder adapter for fixture-proven QR fallbacks;
-- a result-interpreter registry for inactive summaries of structured text;
-- an extension-owned options page for a small, reviewed settings set;
 - an extension-owned image-file scanner that does not expand page permissions;
 - `_locales`-based runtime string lookup;
 - explicit, privacy-reviewed history only if separately enabled and designed; and

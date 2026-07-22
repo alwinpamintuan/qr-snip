@@ -25,6 +25,11 @@ export const MESSAGE_KEYS = [
   'themeLightOption', 'themeDarkOption', 'closeAfterCopyLabel', 'closeAfterCopyDescription',
   'decoderDiagnosticsLabel', 'decoderDiagnosticsDescription', 'settingsPrivacyTitle',
   'settingsPrivacyDescription', 'resetSettingsAction', 'settingsSavedStatus', 'settingsResetStatus',
+  'resultTypeWifi', 'resultTypeContact', 'resultTypeCalendar', 'resultTypeGeo',
+  'fieldNetworkName', 'fieldSecurity', 'fieldHiddenNetwork', 'fieldCredentials', 'fieldName',
+  'fieldOrganization', 'fieldEmail', 'fieldPhone', 'fieldEvent', 'fieldStarts', 'fieldEnds',
+  'fieldLocation', 'fieldLatitude', 'fieldLongitude', 'fieldAltitude', 'fieldPlace',
+  'fieldValueYes', 'fieldValueNo', 'fieldValueIncluded',
 ] as const;
 
 export type MessageKey = typeof MESSAGE_KEYS[number];

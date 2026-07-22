@@ -30,6 +30,7 @@ export type ResultPresentation = Readonly<{
   hostname?: Readonly<{ ascii: string; unicode: string }>;
   isWarning: boolean;
   diagnostics?: string;
+  summary?: readonly Readonly<{ label: string; value: string }>[];
   actions: readonly ResultAction[];
 }>;
 
@@ -131,6 +132,17 @@ export class SnipperView {
     this.resultCard.querySelector('.result-title')!.textContent = presentation.title;
     this.resultCard.querySelector('.result-subtitle')!.textContent = presentation.subtitle;
     this.showResultContent(presentation);
+    const summary = this.resultCard.querySelector<HTMLElement>('.result-summary')!;
+    summary.hidden = !presentation.summary?.length;
+    summary.replaceChildren(...(presentation.summary ?? []).map((field) => {
+      const row = document.createElement('div');
+      const label = document.createElement('dt');
+      const value = document.createElement('dd');
+      label.textContent = field.label;
+      value.textContent = field.value;
+      row.append(label, value);
+      return row;
+    }));
     const diagnostics = this.resultCard.querySelector<HTMLElement>('.decoder-diagnostics')!;
     diagnostics.hidden = !presentation.diagnostics;
     diagnostics.textContent = presentation.diagnostics ?? '';
@@ -279,6 +291,7 @@ export class SnipperView {
             <strong class="hostname-unicode"></strong>
             <code class="hostname-ascii"></code>
           </div>
+          <dl class="result-summary" hidden></dl>
           <div class="result-value" tabindex="0"></div>
           <p class="decoder-diagnostics" hidden></p>
           <div class="security-review" tabindex="0" hidden>

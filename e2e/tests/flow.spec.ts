@@ -42,6 +42,19 @@ test('@critical suspicious links expose every signal before Open anyway', async 
   await expect(page.getByTestId('test-state')).toContainText('OPEN_RESULT');
 });
 
+test('structured payloads show inactive summaries and preserve copy-only handling', async ({ page }) => {
+  await page.goto('/harness/?scenario=wifi');
+  await completeKeyboardSelection(page);
+
+  await expect(page.getByRole('dialog').getByText('Wi-Fi network · preview only', { exact: true })).toBeVisible();
+  await expect(page.getByText('Guest network', { exact: true })).toBeVisible();
+  await expect(page.getByText('WPA', { exact: true })).toBeVisible();
+  await expect(page.getByText('Included', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Open link' })).toHaveCount(0);
+});
+
 test('retry, Escape, and focus containment preserve a keyboard-only flow', async ({ page }) => {
   await page.goto('/harness/?scenario=not-found');
   await completeKeyboardSelection(page);

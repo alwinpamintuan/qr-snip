@@ -55,7 +55,8 @@ Safari is not currently supported. The WebExtension architecture should preserve
 - Frozen-screen pointer or keyboard selection with dimensions and clear corner affordances
 - Crop mapping across device pixel ratio, browser zoom, and viewport size
 - Worker-based local QR decoding with normal, inverted, bounded-downscale, and small-code retry behavior
-- URL, email, phone, and text classification
+- Explicit result-interpreter registry for URL, email, phone, text, Wi-Fi, vCard, calendar, and geo payloads
+- Read-only structured summaries that never connect, import, download, or navigate automatically
 - Full payload preview, Copy, allow-listed Open, Scan another, Try again, Cancel, and Escape actions
 - Deterministic warnings for HTTP, credentials, punycode, IP addresses, private/local destinations, and unusual ports
 - Display truncation for very large values while Copy preserves the complete accepted payload
@@ -102,7 +103,7 @@ On pointer release, the instruction changes to “Scanning selection…” and s
 
 ### State E — result preview
 
-A morphing result card shows the payload type and exact decoded value. Copy is always available. Open is available only for valid allow-listed protocols. “Scan another” returns to selection on the same frozen frame.
+A morphing result card shows the payload type and exact decoded value. Wi-Fi, vCard, calendar, and geo payloads also show an inactive summary. Copy is always available. Open is available only for valid allow-listed protocols. “Scan another” returns to selection on the same frozen frame.
 
 HTTP(S) results show the parsed hostname. If warning signals exist, the first result preview also shows the scanned value, normalized destination when different, each warning in a readable list, a cautionary disclaimer, and an explicit **Open anyway** action.
 

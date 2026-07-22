@@ -1,5 +1,7 @@
 import { WorkerQrDecoder, type DecodeOutcome, type QrDecoder } from '../core/decode';
-import { classifyResult, displayPayload, type ClassifiedResult, type ResultKind } from '../core/result';
+import { displayPayload } from '../core/result';
+import { interpretResult } from '../core/interpreters/registry';
+import type { InterpretedResult, ResultField, ResultFieldLabel, ResultKind } from '../core/interpreters/contract';
 import { toPixelCrop, type SelectionRect } from '../core/selection';
 import type { MessageKey, Translator } from '../i18n/messages';
 import { assessLinkSecurity, type LinkRisk, type LinkSecurityAssessment } from '../security/link-security';
@@ -101,13 +103,13 @@ export class SnipperApplication {
       ])
       : undefined;
     if (outcome.ok) {
-      this.previewResult(classifyResult(outcome.value));
+      this.previewResult(interpretResult(outcome.value));
     } else if (outcome.reason !== 'cancelled') {
       this.showDecodeFailure(outcome.reason);
     }
   }
 
-  private previewResult(result: ClassifiedResult): void {
+  private previewResult(result: InterpretedResult): void {
     const linkSecurity = result.kind === 'url' && result.openUrl
       ? assessLinkSecurity(result.openUrl, toUnicode)
       : undefined;
@@ -125,6 +127,7 @@ export class SnipperApplication {
         displayed.truncated ? this.t('longValueSuffix') : '',
       ]),
       value: displayed.text,
+      ...(result.fields ? { summary: result.fields.map((field) => this.presentField(field)) } : {}),
       ...(linkSecurity ? { hostname: linkSecurity.hostname } : {}),
       isWarning: false,
       ...(this.diagnostics ? { diagnostics: this.diagnostics } : {}),
@@ -141,7 +144,7 @@ export class SnipperApplication {
     });
   }
 
-  private previewSuspiciousLink(result: ClassifiedResult, assessment: LinkSecurityAssessment): void {
+  private previewSuspiciousLink(result: InterpretedResult, assessment: LinkSecurityAssessment): void {
     const url = result.openUrl!;
     const scannedValue = this.displayPayload(result.value);
     const resolvedDestination = this.displayPayload(url);
@@ -249,9 +252,28 @@ export class SnipperApplication {
 
   private resultKindLabel(kind: ResultKind): string {
     const key: Record<ResultKind, MessageKey> = {
-      url: 'resultTypeUrl', email: 'resultTypeEmail', phone: 'resultTypePhone', text: 'resultTypeText',
+      url: 'resultTypeUrl', email: 'resultTypeEmail', phone: 'resultTypePhone', wifi: 'resultTypeWifi',
+      contact: 'resultTypeContact', calendar: 'resultTypeCalendar', geo: 'resultTypeGeo', text: 'resultTypeText',
     };
     return this.t(key[kind]);
+  }
+
+  private presentField(field: ResultField): Readonly<{ label: string; value: string }> {
+    const keys: Record<ResultFieldLabel, MessageKey> = {
+      networkName: 'fieldNetworkName', security: 'fieldSecurity', hiddenNetwork: 'fieldHiddenNetwork',
+      credentials: 'fieldCredentials', name: 'fieldName', organization: 'fieldOrganization',
+      email: 'fieldEmail', phone: 'fieldPhone', event: 'fieldEvent', starts: 'fieldStarts', ends: 'fieldEnds',
+      location: 'fieldLocation', latitude: 'fieldLatitude', longitude: 'fieldLongitude',
+      altitude: 'fieldAltitude', place: 'fieldPlace',
+    };
+    return {
+      label: this.t(keys[field.label]),
+      value: field.label === 'credentials'
+        ? this.t(field.value ? 'fieldValueIncluded' : 'fieldValueNo')
+        : typeof field.value === 'boolean'
+        ? this.t(field.value ? 'fieldValueYes' : 'fieldValueNo')
+        : field.value,
+    };
   }
 
   private riskMessage(risk: LinkRisk): string {

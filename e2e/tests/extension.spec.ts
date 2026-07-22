@@ -69,7 +69,7 @@ test('component gallery exposes deterministic visual states', async ({}, testInf
 test('onboarding explains the privacy model and options persist locally', async ({}, testInfo) => {
   const options = await context.newPage();
   await options.goto(`chrome-extension://${extensionId}/options.html?onboarding=1`);
-  await expect(options.getByRole('heading', { name: 'QR Snip settings' })).toBeVisible();
+  await expect(options.getByRole('heading', { name: 'Preferences' })).toBeVisible();
   await expect(options.getByRole('heading', { name: 'Before your first scan' })).toBeVisible();
   await expect(options.getByText('Processing stays local')).toBeVisible();
   await expect(options.getByText('You decide what happens')).toBeVisible();

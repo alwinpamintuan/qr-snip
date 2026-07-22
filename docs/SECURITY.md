@@ -36,7 +36,7 @@ Only these protocols can be handed to the browser:
 - `mailto:`
 - `tel:`
 
-`javascript:`, `data:`, `file:`, browser-internal schemes, extension schemes, and malformed values remain plain text. The allow list is enforced independently in result classification and again in the background message handler.
+`javascript:`, `data:`, `file:`, browser-internal schemes, extension schemes, and malformed values remain plain text. The allow list is enforced independently in result interpretation and again in the background message handler. Structured Wi-Fi, vCard, calendar, and geo interpreters are pure transformations: they add read-only text summaries but never connect, import, download, or navigate.
 
 ### Suspicious-link confirmation
 
@@ -88,7 +88,7 @@ Before every store release:
 
 1. Run `pnpm check:full` and inspect both generated manifests for permissions, content scripts, web-accessible resources, and externally connectable endpoints.
 2. Search runtime bundles for `fetch`, XHR, WebSocket, analytics SDKs, and remote URLs.
-3. Fuzz result classification with mixed case, whitespace, control characters, long inputs, encoded URLs, Unicode domains, IPv4 variants, IPv6, and malformed mail/tel values.
+3. Fuzz result interpretation with mixed case, whitespace, control characters, long inputs, encoded URLs, Unicode domains, IPv4 variants, IPv6, malformed mail/tel values, and malformed structured payloads.
 4. Confirm every navigation passes through `isAllowedOpenUrl` in the background.
 5. Confirm no code path opens a result during decode or initial preview render.
 6. Review dependencies and inspect every lockfile change; record why each runtime dependency is necessary.

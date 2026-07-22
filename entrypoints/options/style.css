@@ -34,8 +34,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: var(--surface); }
 #app { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 52px 0 72px; }
-.page-heading { display: flex; gap: 14px; align-items: center; margin-bottom: 38px; }
-.page-heading img { width: 42px; height: 42px; }
+.page-heading { display: flex; align-items: center; margin-bottom: 38px; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { margin: 0; font-size: clamp(1.9rem, 5vw, 2.5rem); line-height: 1; letter-spacing: -.035em; }
 h2 { margin-bottom: 8px; font-size: 1.35rem; }

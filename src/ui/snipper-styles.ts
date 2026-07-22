@@ -34,6 +34,26 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     font-variant-numeric: tabular-nums;
   }
 
+  .result-summary {
+    display: grid;
+    grid-template-columns: minmax(100px, .7fr) minmax(0, 1.3fr);
+    gap: 0;
+    margin: 20px 0 0;
+    overflow: hidden;
+    border-radius: var(--qr-shapes-medium);
+    background: var(--qr-surface-high);
+  }
+
+  .result-summary[hidden] { display: none; }
+  .result-summary > div { display: contents; }
+  .result-summary dt,
+  .result-summary dd { margin: 0; padding: 10px 14px; border-bottom: 1px solid color-mix(in srgb, var(--qr-outline) 24%, transparent); }
+  .result-summary dt { color: var(--qr-on-surface-variant); font-size: var(--qr-typography-caption-size); font-weight: 700; }
+  .result-summary dd { overflow-wrap: anywhere; color: var(--qr-on-surface); font-size: var(--qr-typography-body-size); }
+  .result-summary > div:last-child dt,
+  .result-summary > div:last-child dd { border-bottom: 0; }
+  .result-summary:not([hidden]) + .result-value { margin-top: 12px; }
+
   .qr-snip-app {
     position: fixed;
     inset: 0;
@@ -294,6 +314,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
 
   .result-card.visible .result-heading,
   .result-card.visible .hostname-row:not([hidden]),
+  .result-card.visible .result-summary:not([hidden]),
   .result-card.visible .result-value:not([hidden]),
   .result-card.visible .security-review:not([hidden]),
   .result-card.visible .result-actions {
@@ -301,6 +322,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   }
 
   .result-card.visible .hostname-row:not([hidden]) { animation-delay: 55ms; }
+  .result-card.visible .result-summary:not([hidden]),
   .result-card.visible .result-value:not([hidden]),
   .result-card.visible .security-review:not([hidden]) { animation-delay: 95ms; }
   .result-card.visible .result-actions { animation-delay: 145ms; }

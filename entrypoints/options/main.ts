@@ -12,7 +12,6 @@ document.title = t('optionsTitle');
 document.documentElement.dir = i18n.direction;
 app.innerHTML = `
   <header class="page-heading">
-    <img src="/icons/qr-snip-48.png" alt="">
     <h1>${escapeHtml(t('optionsTitle'))}</h1>
     <span class="status" role="status" aria-live="polite"></span>
   </header>
