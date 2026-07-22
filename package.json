@@ -26,8 +26,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e:prepare": "vite build --config e2e/vite.config.ts",
+    "e2e:firefox:lint": "web-ext lint --source-dir .output/firefox-mv3",
+    "test:e2e:browser": "playwright test",
+    "test:e2e": "pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
+    "test:e2e:stability": "pnpm e2e:prepare && playwright test --project=chromium-harness --project=firefox-harness --grep \"@critical\" --repeat-each=100 --workers=4 --retries=1",
     "fixtures:generate": "node scripts/generate-qr-fixtures.mjs",
-    "check": "pnpm typecheck && pnpm test && pnpm locales:check && pnpm build:all && pnpm permissions:check",
+    "check": "pnpm typecheck && pnpm test && pnpm locales:check && pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -35,6 +40,7 @@
     "punycode": "^2.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/pngjs": "^6.0.5",
     "@types/punycode": "^2.1.4",
     "@types/qrcode": "^1.5.6",
@@ -42,6 +48,7 @@
     "qrcode": "^1.5.4",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10",
+    "web-ext": "^10.5.0",
     "wxt": "^0.20.11"
   },
   "engines": {

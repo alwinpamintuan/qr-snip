@@ -45,5 +45,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install browser test engines
+        run: pnpm exec playwright install --with-deps chromium firefox
+
       - name: Run repository checks
         run: pnpm check
+
+      - name: Retain synthetic browser-test evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-evidence-${{ matrix.os }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,66 @@
+import { chromium, expect, test, type BrowserContext, type CDPSession, type Page } from '@playwright/test';
+import { resolve } from 'node:path';
+
+let context: BrowserContext;
+let fixturePage: Page;
+let extensionId = '';
+let browserSession: CDPSession;
+
+test.beforeAll(async () => {
+  const extensionPath = resolve('.output/chrome-mv3');
+  context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
+  });
+  let worker = context.serviceWorkers()[0];
+  worker ??= await context.waitForEvent('serviceworker');
+  extensionId = new URL(worker.url()).host;
+  browserSession = await context.browser()!.newBrowserCDPSession();
+  fixturePage = await context.newPage();
+  await fixturePage.goto('http://127.0.0.1:4174/e2e/fixtures/gallery.html');
+});
+
+test.afterAll(async () => {
+  await context.close();
+});
+
+test('browser action activates one real extension overlay across reinvocation', async () => {
+  await triggerAction();
+  await expect(fixturePage.locator('[id^="qr-snip-"]')).toHaveCount(1);
+  await triggerAction();
+  await expect(fixturePage.locator('[id^="qr-snip-"]')).toHaveCount(1);
+  await fixturePage.keyboard.press('Escape');
+  await expect(fixturePage.locator('[id^="qr-snip-"]')).toHaveCount(0);
+});
+
+async function triggerAction(): Promise<void> {
+  const { targetInfos } = await browserSession.send('Target.getTargets', {
+    filter: [{ type: 'tab', exclude: false }],
+  }) as {
+    targetInfos: Array<{ targetId: string; type: string; url: string }>;
+  };
+  const target = targetInfos.find(({ type, url }) => type === 'tab' && url === fixturePage.url());
+  if (!target) throw new Error('Synthetic fixture tab target was not found.');
+  await browserSession.send('Extensions.triggerAction', { id: extensionId, targetId: target.targetId });
+}
+
+test('component gallery exposes deterministic visual states', async ({}, testInfo) => {
+  const gallery = await context.newPage();
+  const states = [
+    ['light', ''],
+    ['dark', '?theme=dark'],
+    ['contrast', '?contrast=more'],
+    ['narrow', '?viewport=narrow'],
+    ['text-200', '?scale=2'],
+  ] as const;
+  for (const [name, query] of states) {
+    await gallery.goto(`chrome-extension://${extensionId}/gallery.html${query}`);
+    await expect(gallery.getByRole('heading', { name: 'Material, with momentum.' })).toBeVisible();
+    await testInfo.attach(`gallery-${name}`, {
+      body: await gallery.screenshot({ fullPage: true }),
+      contentType: 'image/png',
+    });
+  }
+  await gallery.close();
+});

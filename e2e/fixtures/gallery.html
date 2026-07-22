@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Snip synthetic fixture gallery</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { min-height: 100vh; margin: 0; background: linear-gradient(135deg, #f8eefc, #eee8f3); color: #211b24; }
+      main { width: min(1100px, calc(100% - 48px)); margin: auto; padding: 48px 0 120px; }
+      h1 { font-size: clamp(32px, 5vw, 64px); letter-spacing: -.04em; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+      figure { min-height: 300px; margin: 0; padding: 20px; background: #fff; border: 2px solid #75578b; border-radius: 32px; box-shadow: 0 14px 40px #35233f33; }
+      figure img, canvas, video { display: block; width: 220px; height: 220px; margin: 18px auto; object-fit: contain; background: #fff; }
+      .transformed img { transform: rotate(7deg) scale(.9); filter: saturate(.82) contrast(1.06); }
+      .hostile-zone * { font: inherit !important; letter-spacing: normal !important; border-radius: 0 !important; }
+      .mutation { position: fixed; right: 12px; bottom: 12px; padding: 8px 12px; background: #211b24; color: #fff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Synthetic screen fixtures</h1>
+      <div class="grid">
+        <figure><figcaption>Static image</figcaption><img src="/tests/fixtures/qr/generated/positive-v01-00-normal.png" alt="Synthetic QR code"></figure>
+        <figure><figcaption>Canvas</figcaption><canvas id="fixture-canvas" width="220" height="220"></canvas></figure>
+        <figure><figcaption>Paused video poster</figcaption><video poster="/tests/fixtures/qr/generated/positive-v01-05-colored.png" muted aria-label="Synthetic paused video"></video></figure>
+        <figure class="transformed"><figcaption>Transformed element</figcaption><img src="/tests/fixtures/qr/generated/positive-v05-01-normal.png" alt="Transformed synthetic QR code"></figure>
+        <figure class="hostile-zone"><figcaption>Hostile page CSS</figcaption><img src="/tests/fixtures/qr/generated/positive-v10-02-normal.png" alt="QR code inside hostile CSS"></figure>
+      </div>
+    </main>
+    <script>
+      const image = new Image();
+      image.addEventListener('load', () => document.querySelector('#fixture-canvas').getContext('2d').drawImage(image, 0, 0, 220, 220));
+      image.src = '/tests/fixtures/qr/generated/positive-v01-00-inverted.png';
+      let mutation = 0;
+      setInterval(() => {
+        document.querySelector('.mutation')?.remove();
+        const badge = document.createElement('div');
+        badge.className = 'mutation';
+        badge.textContent = `Synthetic mutation ${++mutation}`;
+        document.body.append(badge);
+      }, 250);
+    </script>
+  </body>
+</html>

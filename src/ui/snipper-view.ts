@@ -47,7 +47,10 @@ export class SnipperView {
   private announcementTimer: number | null = null;
   private returnFocus: HTMLElement | null = null;
 
-  constructor(private readonly i18n: I18n) {}
+  constructor(
+    private readonly i18n: I18n,
+    private readonly shadowMode: ShadowRootMode = 'closed',
+  ) {}
 
   get selectionSurface(): HTMLElement {
     const surface = this.root?.querySelector<HTMLElement>('.qr-snip-app');
@@ -77,7 +80,7 @@ export class SnipperView {
       zIndex: '2147483647',
       display: 'block',
     });
-    this.root = this.host.attachShadow({ mode: 'closed' });
+    this.root = this.host.attachShadow({ mode: this.shadowMode });
     this.installStyles();
     this.root.append(this.createLayout());
     document.documentElement.append(this.host);
