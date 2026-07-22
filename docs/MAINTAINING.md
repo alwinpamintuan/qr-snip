@@ -125,7 +125,7 @@ Each release should state:
 - supported browser targets and minimum Firefox version;
 - headline features and meaningful fixes;
 - tested QR compatibility and known unsupported formats;
-- `activeTab` and `scripting` permissions;
+- `activeTab`, `scripting`, and settings-only `storage` permissions;
 - local-only screenshot and payload behavior;
 - unpacked Chromium and temporary Firefox installation steps;
 - security-relevant changes;

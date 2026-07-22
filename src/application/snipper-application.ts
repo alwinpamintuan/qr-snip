@@ -7,6 +7,7 @@ import { toUnicode } from 'punycode';
 import { KeyboardSelection } from '../ui/keyboard-selection';
 import { SelectionGesture } from '../ui/selection-gesture';
 import { SnipperView } from '../ui/snipper-view';
+import { DEFAULT_SETTINGS, type Settings } from '../core/settings';
 
 export class SnipperApplication {
   private gesture: SelectionGesture | null = null;
@@ -15,6 +16,8 @@ export class SnipperApplication {
   private screenshotUrl = '';
   private invocationId = '';
   private decodeController: AbortController | null = null;
+  private settings: Settings = DEFAULT_SETTINGS;
+  private diagnostics: string | undefined;
 
   constructor(
     private readonly view: SnipperView,
@@ -22,16 +25,18 @@ export class SnipperApplication {
     private readonly decoder: QrDecoder = new WorkerQrDecoder(),
   ) {}
 
-  start(invocationId: string, screenshotUrl: string): void {
+  start(invocationId: string, screenshotUrl: string, settings: Settings = DEFAULT_SETTINGS): void {
     this.destroy();
     this.invocationId = invocationId;
     this.screenshotUrl = screenshotUrl;
+    this.settings = settings;
+    this.diagnostics = undefined;
     this.view.mount(screenshotUrl, {
       onClose: () => this.destroy(),
       onKeyboardSelection: () => this.beginKeyboardSelection(),
       onSnapshotReady: () => this.onSnapshotReady(),
       onSnapshotError: () => this.showDecodeFailure('image-error'),
-    });
+    }, settings.theme);
     this.gesture = new SelectionGesture(this.view.selectionSurface, {
       onChange: (selection) => {
         this.view.setKeyboardSelectionActionVisible(true);
@@ -86,9 +91,15 @@ export class SnipperApplication {
       { width: window.innerWidth, height: window.innerHeight },
       this.view.snapshotDimensions,
     );
+    const startedAt = performance.now();
     const outcome = await this.decoder.decode(this.screenshotUrl, crop, this.decodeController.signal);
     if (!this.screenshotUrl || invocationId !== this.invocationId) return;
     this.view.setBusy(false);
+    this.diagnostics = this.settings.decoderDiagnostics
+      ? this.t('decoderDiagnosticsSummary', [
+        String(Math.round(performance.now() - startedAt)), String(crop.sw), String(crop.sh),
+      ])
+      : undefined;
     if (outcome.ok) {
       this.previewResult(classifyResult(outcome.value));
     } else if (outcome.reason !== 'cancelled') {
@@ -116,6 +127,7 @@ export class SnipperApplication {
       value: displayed.text,
       ...(linkSecurity ? { hostname: linkSecurity.hostname } : {}),
       isWarning: false,
+      ...(this.diagnostics ? { diagnostics: this.diagnostics } : {}),
       actions: [
         { label: this.t('scanAnotherAction'), icon: 'refresh', onSelect: () => this.reset() },
         { label: this.t('copyAction'), icon: 'copy', onSelect: () => void this.copyValue(result.value) },
@@ -150,6 +162,7 @@ export class SnipperApplication {
       },
       hostname: assessment.hostname,
       isWarning: true,
+      ...(this.diagnostics ? { diagnostics: this.diagnostics } : {}),
       actions: [
         { label: this.t('scanAnotherAction'), icon: 'refresh', onSelect: () => this.reset() },
         { label: this.t('copyInsteadAction'), icon: 'copy', onSelect: () => void this.copyValue(result.value) },
@@ -168,6 +181,7 @@ export class SnipperApplication {
           : this.t('imageErrorMessage'),
       value: this.t('selectionHelp'),
       isWarning: true,
+      ...(this.diagnostics ? { diagnostics: this.diagnostics } : {}),
       actions: [
         { label: this.t('cancelAction'), onSelect: () => this.destroy() },
         { label: this.t('tryAgainAction'), icon: 'refresh', filled: true, onSelect: () => this.reset() },
@@ -182,11 +196,17 @@ export class SnipperApplication {
   private async copyValue(value: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(value);
-      this.view.showToast(this.t('copiedToast'));
+      this.onCopied();
     } catch {
       const copied = this.view.copyFallback(value);
-      this.view.showToast(copied ? this.t('copiedToast') : this.t('copyFailedToast'));
+      if (copied) this.onCopied();
+      else this.view.showToast(this.t('copyFailedToast'));
     }
+  }
+
+  private onCopied(): void {
+    if (this.settings.closeAfterCopy) this.destroy();
+    else this.view.showToast(this.t('copiedToast'));
   }
 
   private rejectSmallSelection(): void {

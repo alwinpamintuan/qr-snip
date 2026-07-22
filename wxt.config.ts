@@ -8,7 +8,11 @@ export default defineConfig({
     short_name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     version: packageMetadata.version,
-    permissions: ['activeTab', 'scripting'],
+    permissions: ['activeTab', 'scripting', 'storage'],
+    options_ui: {
+      page: 'options.html',
+      open_in_tab: true,
+    },
     icons: {
       16: 'icons/qr-snip-16.png',
       32: 'icons/qr-snip-32.png',

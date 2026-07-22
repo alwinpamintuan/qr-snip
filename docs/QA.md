@@ -25,7 +25,7 @@ pnpm check:full
 4. deterministic browser-harness generation and Firefox `web-ext` validation; and
 5. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
 
-The manifest assertion requires exactly `activeTab` and `scripting`, no host permissions, no persistent content scripts, no external messaging, no web-accessible runtime assets, and a runtime content bundle no larger than 220,000 bytes. The size budget prevents worker-only decoder code from returning to the page-executed startup path. A production change must not be accepted based on the Chromium build alone.
+The manifest assertion requires exactly `activeTab`, `scripting`, and settings-only `storage`, no host permissions, no persistent content scripts, no external messaging, no web-accessible runtime assets, and a runtime content bundle no larger than 220,000 bytes. The size budget prevents worker-only decoder code from returning to the page-executed startup path. A production change must not be accepted based on the Chromium build alone.
 
 Archive inspection, dependency review, SBOM generation, and store submission checks remain tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
@@ -39,7 +39,7 @@ The repository currently provides reproducible automated evidence for:
 - 1080p, 1440p, 4K, and 2× device-scale screen composites with explicit crop metadata;
 - a corpus gate of at least 90% exact positive decodes and zero negative-corpus false positives;
 - protocol rejection, Unicode edge whitespace, control characters, private destinations, punycode, credentials, unusual ports, display truncation, and runtime-message guards;
-- successful Chromium and Firefox MV3 builds with only `activeTab` and `scripting`; and
+- successful Chromium and Firefox MV3 builds with only `activeTab`, `scripting`, and settings-only `storage`; and
 - inline decoder-worker packaging with transferable RGBA buffers and no exposed worker asset.
 - real Chromium action activation, capture/injection, Escape, and rapid reinvocation;
 - Chromium and Firefox happy, suspicious-link, copy, explicit-open, retry, keyboard, focus-containment, long-string, and RTL flows;
@@ -70,6 +70,8 @@ Do not describe browser coverage, performance, memory behavior, or security revi
 | Typed locale registry and pseudo/RTL behavior | `tests/i18n.test.ts`, `scripts/assert-locales.mjs` |
 | Keyboard movement and resize semantics | `tests/selection.test.ts`, `tests/keyboard-selection.test.ts` |
 | Generated browser permissions and worker packaging | `scripts/assert-manifest.mjs` |
+| Settings defaults, validation, and migration | `tests/settings.test.ts` |
+| First-run education and options persistence | `e2e/tests/extension.spec.ts` |
 | Chromium extension action/reinvocation and component states | `e2e/tests/extension.spec.ts` |
 | Chromium/Firefox critical and accessibility flows | `e2e/tests/flow.spec.ts` |
 | Hostile and mutating page surfaces | `e2e/tests/fixture-gallery.spec.ts` |

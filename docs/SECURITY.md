@@ -17,11 +17,11 @@ The default behavior is deliberately preview-first:
 
 ### Least privilege
 
-Only `activeTab` and `scripting` are declared. Firefox additionally declares the special `data_collection_permissions` value `none`; this is a no-collection disclosure, not access to user data. The extension has no persistent host permission, browsing history, tabs metadata, clipboard permission, storage permission, downloads permission, or remote host access. Access starts after the toolbar/shortcut gesture and ends with the browser's `activeTab` lifetime.
+Only `activeTab`, `scripting`, and `storage` are declared. `storage` contains one versioned settings record (theme, close-after-copy, and decoder-diagnostics preference) and never contains page-derived data. Firefox additionally declares the special `data_collection_permissions` value `none`; this is a no-collection disclosure, not access to user data. The extension has no persistent host permission, browsing history, tabs metadata, clipboard permission, downloads permission, or remote host access. Page access starts after the toolbar/shortcut gesture and ends with the browser's `activeTab` lifetime.
 
 ### Local-only processing
 
-The browser generates the screenshot, the content script extracts only the bounded selected crop, and an inline worker runs `jsQR` over the transferred RGBA buffer. Product runtime code makes no network request. Screenshots and decoded payloads are not persisted. Closing the overlay aborts decoding, terminates the worker, removes DOM nodes, and releases screenshot, canvas, and application references.
+The browser generates the screenshot, the content script extracts only the bounded selected crop, and an inline worker runs `jsQR` over the transferred RGBA buffer. Product runtime code makes no network request. Screenshots and decoded payloads are not persisted. Opt-in decoder diagnostics display only elapsed time and selected pixel dimensions in memory. Closing the overlay aborts decoding, terminates the worker, removes DOM nodes, and releases screenshot, canvas, and application references.
 
 ### Safe rendering
 

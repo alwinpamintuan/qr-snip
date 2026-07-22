@@ -33,11 +33,16 @@ ui/ + workers/      Presentation/gesture adapter and CPU-bound decoder adapter
 
 Important dependency rules:
 
+The extension-owned options entrypoint reads and writes the versioned settings record through a
+narrow storage adapter. The background loads those preferences during activation and sends them
+with `START_CAPTURE`; content code never reads arbitrary storage or persists page-derived data.
+
 - Core geometry, payload classification, message guards, and link assessment do not call WebExtension APIs.
 - The background entrypoint is the only component allowed to capture a tab, inject code, or create a destination tab.
 - The view renders state but does not decide whether a destination is allowed.
 - The application orchestrates selection and results but delegates pixel decoding through `QrDecoder`.
 - The worker receives only bounded RGBA pixels and returns a payload or typed local failure.
+- `storage.local` contains only the versioned settings record; screenshots, payloads, URLs, and diagnostics are not persisted.
 
 These boundaries express SOLID principles without creating generic layers that do not map to a real security, test, or runtime boundary.
 
@@ -184,8 +189,9 @@ Geometry belongs in `src/core/selection.ts` and must remain testable without DOM
 
 - `activeTab`: temporary access following toolbar or shortcut invocation.
 - `scripting`: runtime injection into the invoked tab.
+- `storage`: the versioned settings record only.
 
-There is deliberately no `<all_urls>`, `tabs`, `storage`, clipboard, downloads, network host, or persistent content-script permission. Firefox additionally declares `data_collection_permissions.required: ["none"]`, which is a no-collection disclosure rather than access to user data.
+There is deliberately no `<all_urls>`, `tabs`, clipboard, downloads, network host, or persistent content-script permission. Firefox additionally declares `data_collection_permissions.required: ["none"]`, which is a no-collection disclosure rather than access to user data.
 
 ### Trust boundaries
 
@@ -197,6 +203,7 @@ There is deliberately no `<all_urls>`, `tabs`, `storage`, clipboard, downloads, 
 | QR payload | Script URL, active markup, control characters, or huge text | `textContent`, normalization, payload limits, display truncation, strict protocol allow list |
 | Link assessment | False sense of safety | Deterministic warnings, explicit disclaimer, exact hostname, no remote trust claim |
 | Runtime message | Forged or malformed data | Shape guards, invocation IDs, stale-tab checks, and privileged-boundary protocol validation |
+| Local settings | Unexpected or future schema data | Versioned migration, field validation, safe defaults, and no page-derived fields |
 | Clipboard | API denial or page observation | User-triggered API call; fallback element remains inside the closed Shadow Root and is immediately removed |
 
 The host page can visually imitate an extension overlay. QR Snip must therefore never ask for credentials, claim a destination is safe, or hide the exact destination behind a friendly title.

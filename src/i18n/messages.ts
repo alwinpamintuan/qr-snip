@@ -18,6 +18,13 @@ export const MESSAGE_KEYS = [
   'keyboardSelectionStarted', 'selectionAnnouncement', 'galleryTitle', 'galleryEyebrow',
   'galleryHero', 'galleryDescription', 'galleryActions', 'galleryStatus',
   'galleryResultSurface', 'galleryReady', 'galleryPreview', 'galleryExampleResult',
+  'decoderDiagnosticsSummary', 'optionsTitle', 'onboardingTitle', 'onboardingIntro', 'onboardingEducationLabel',
+  'onboardingActivateTitle', 'onboardingActivateDescription', 'onboardingPrivacyTitle',
+  'onboardingPrivacyDescription', 'onboardingPreviewTitle', 'onboardingPreviewDescription',
+  'onboardingRestrictedTitle', 'onboardingRestrictedDescription', 'themeSettingLabel', 'themeSettingDescription', 'themeSystemOption',
+  'themeLightOption', 'themeDarkOption', 'closeAfterCopyLabel', 'closeAfterCopyDescription',
+  'decoderDiagnosticsLabel', 'decoderDiagnosticsDescription', 'settingsPrivacyTitle',
+  'settingsPrivacyDescription', 'resetSettingsAction', 'settingsSavedStatus', 'settingsResetStatus',
 ] as const;
 
 export type MessageKey = typeof MESSAGE_KEYS[number];

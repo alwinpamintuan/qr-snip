@@ -61,6 +61,7 @@ Safari is not currently supported. The WebExtension architecture should preserve
 - Display truncation for very large values while Copy preserves the complete accepted payload
 - Light, dark, increased-contrast, and reduced-motion adaptations
 - Chromium and Firefox Manifest V3 builds
+- Extension-owned onboarding and settings for theme, close-after-copy, and local decoder diagnostics
 - Unit, security, geometry, message, decoder, and fixture-corpus tests
 
 ### Not currently supported
@@ -83,6 +84,9 @@ These are separate product decisions, not defects in the current workflow. Style
 ### State A — idle
 
 No QR Snip content script or overlay runs on the page. The extension stores no page information.
+
+On first installation only, an extension-owned onboarding page explains activation, local processing,
+preview-first safety, and restricted pages. The options page stores only the versioned preferences.
 
 ### State B — preparing
 
@@ -136,7 +140,7 @@ Design changes must preserve decoded-value readability, destination emphasis, fo
 | FR-09 | Cleanup | Close, Escape, reinvocation, and cancellation remove the host and release screenshot, canvas, and worker references |
 | FR-10 | Isolation | Host-page CSS does not restyle controls, and the page cannot directly access the closed Shadow Root |
 | FR-11 | Cross-browser | Production builds and smoke tests pass on supported Chromium browsers and Firefox 140+ |
-| FR-12 | Least privilege | Generated manifests contain only reviewed permissions and expose no persistent content script or external messaging surface |
+| FR-12 | Least privilege | Generated manifests contain only reviewed `activeTab`, `scripting`, and settings-only `storage` permissions and expose no persistent content script or external messaging surface |
 
 ## 7. Non-functional requirements
 
@@ -159,7 +163,7 @@ Release quality is evaluated without collecting screenshot or payload telemetry:
 - Zero decoded results from the maintained negative fixture corpus
 - Median activation-to-result under two seconds in synthetic usability sessions
 - Fewer than 2% of representative sessions blocked by unexplained platform restrictions
-- No install permission beyond the reviewed `activeTab` and `scripting` set
+- No install permission beyond the reviewed `activeTab`, `scripting`, and settings-only `storage` set
 - No screenshot or payload data in telemetry by design
 - No unresolved critical or high-severity security finding at release sign-off
 

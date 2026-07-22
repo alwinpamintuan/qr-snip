@@ -18,7 +18,7 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener((message: unknown) => {
       if (isProbeContentMessage(message)) return Promise.resolve({ ready: true });
       if (!isStartCaptureMessage(message)) return undefined;
-      contentGlobal.__qrSnipApplication?.start(message.invocationId, message.screenshotUrl);
+      contentGlobal.__qrSnipApplication?.start(message.invocationId, message.screenshotUrl, message.settings);
       return Promise.resolve({ started: true, invocationId: message.invocationId });
     });
   },

@@ -1,7 +1,10 @@
+import { isSettings, type Settings } from './settings';
+
 export type StartCaptureMessage = {
   type: 'START_CAPTURE';
   invocationId: string;
   screenshotUrl: string;
+  settings: Settings;
 };
 
 export type ProbeContentMessage = {
@@ -28,7 +31,8 @@ export function isStartCaptureMessage(value: unknown): value is StartCaptureMess
     && typeof message.invocationId === 'string'
     && message.invocationId.length > 0
     && typeof message.screenshotUrl === 'string'
-    && message.screenshotUrl.startsWith('data:image/');
+    && message.screenshotUrl.startsWith('data:image/')
+    && isSettings(message.settings);
 }
 
 export function isOpenResultMessage(value: unknown): value is OpenResultMessage {

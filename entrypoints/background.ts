@@ -1,6 +1,7 @@
 import { isAllowedOpenUrl } from '../src/core/result';
 import { isOpenResultMessage } from '../src/core/messages';
 import { createI18n, type MessageKey, type Translator } from '../src/i18n/messages';
+import { loadSettings } from '../src/application/settings-store';
 
 type ActivationFailure =
   | 'restricted-page'
@@ -29,6 +30,10 @@ export default defineBackground(() => {
     void beginSnip(tab, activeInvocations, t);
   });
 
+  browser.runtime.onInstalled.addListener((details) => {
+    void handleInstalled(details.reason);
+  });
+
   browser.runtime.onMessage.addListener((message: unknown) => {
     if (!isOpenResultMessage(message) || !isAllowedOpenUrl(message.url)) return undefined;
     return browser.tabs.create({ url: message.url });
@@ -53,9 +58,10 @@ async function beginSnip(
     return;
   }
 
-  const [captureResult, contentResult] = await Promise.allSettled([
+  const [captureResult, contentResult, settingsResult] = await Promise.allSettled([
     browser.tabs.captureVisibleTab(tab.windowId, { format: 'png' }),
     ensureContentScript(tabId),
+    loadSettings(browser.storage.local),
   ]);
   if (captureResult.status === 'rejected') {
     await showActionError(tabId, categorizeApiError(captureResult.reason, 'capture-failed'), t);
@@ -63,6 +69,11 @@ async function beginSnip(
   }
   if (contentResult.status === 'rejected') {
     await showActionError(tabId, categorizeApiError(contentResult.reason, 'injection-failed'), t);
+    return;
+  }
+  const settings = settingsResult.status === 'fulfilled' ? settingsResult.value : undefined;
+  if (!settings) {
+    await showActionError(tabId, 'extension-invalidated', t);
     return;
   }
   if (activeInvocations.get(tabId) !== invocationId) return;
@@ -76,11 +87,18 @@ async function beginSnip(
       type: 'START_CAPTURE',
       invocationId,
       screenshotUrl: captureResult.value,
+      settings,
     });
     if (response?.invocationId !== invocationId) await showActionError(tabId, 'navigation-race', t);
   } catch (error) {
     await showActionError(tabId, categorizeApiError(error, 'navigation-race'), t);
   }
+}
+
+async function handleInstalled(reason: string): Promise<void> {
+  await loadSettings(browser.storage.local);
+  if (reason !== 'install') return;
+  await browser.tabs.create({ url: browser.runtime.getURL('/options.html?onboarding=1') });
 }
 
 async function ensureContentScript(tabId: number): Promise<void> {

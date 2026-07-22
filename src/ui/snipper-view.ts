@@ -3,6 +3,7 @@ import type { I18n } from '../i18n/messages';
 import { createActionButton as createButtonPrimitive, createIconButton, createStatusIcon } from './components';
 import { createIcon, type IconName } from './icons';
 import { SNIPPER_STYLES } from './snipper-styles';
+import type { ThemePreference } from '../core/settings';
 
 let sharedStyleSheet: CSSStyleSheet | null | undefined;
 let sharedLayoutTemplate: HTMLTemplateElement | undefined;
@@ -28,6 +29,7 @@ export type ResultPresentation = Readonly<{
   review?: SecurityReviewPresentation;
   hostname?: Readonly<{ ascii: string; unicode: string }>;
   isWarning: boolean;
+  diagnostics?: string;
   actions: readonly ResultAction[];
 }>;
 
@@ -72,7 +74,7 @@ export class SnipperView {
     };
   }
 
-  mount(screenshotUrl: string, callbacks: SnipperViewCallbacks): void {
+  mount(screenshotUrl: string, callbacks: SnipperViewCallbacks, theme: ThemePreference = 'system'): void {
     this.unmount();
     this.host = document.createElement('div');
     this.host.id = `qr-snip-${browser.runtime.id}`;
@@ -83,6 +85,7 @@ export class SnipperView {
       display: 'block',
     });
     this.root = this.host.attachShadow({ mode: this.shadowMode });
+    if (theme !== 'system') this.host.dataset.theme = theme;
     this.installStyles();
     this.root.append(this.createLayout());
     document.documentElement.append(this.host);
@@ -128,6 +131,9 @@ export class SnipperView {
     this.resultCard.querySelector('.result-title')!.textContent = presentation.title;
     this.resultCard.querySelector('.result-subtitle')!.textContent = presentation.subtitle;
     this.showResultContent(presentation);
+    const diagnostics = this.resultCard.querySelector<HTMLElement>('.decoder-diagnostics')!;
+    diagnostics.hidden = !presentation.diagnostics;
+    diagnostics.textContent = presentation.diagnostics ?? '';
     const hostname = this.resultCard.querySelector<HTMLElement>('.hostname-row')!;
     if (presentation.hostname) {
       hostname.hidden = false;
@@ -274,6 +280,7 @@ export class SnipperView {
             <code class="hostname-ascii"></code>
           </div>
           <div class="result-value" tabindex="0"></div>
+          <p class="decoder-diagnostics" hidden></p>
           <div class="security-review" tabindex="0" hidden>
             <section class="review-section">
               <span class="review-label"></span>

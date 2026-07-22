@@ -93,5 +93,37 @@
   "galleryResultSurface": { "message": "Result surface" },
   "galleryReady": { "message": "Ready to scan" },
   "galleryPreview": { "message": "Website · preview only. The destination stays inactive until you choose to open it." },
-  "galleryExampleResult": { "message": "Example result" }
+  "galleryExampleResult": { "message": "Example result" },
+  "decoderDiagnosticsSummary": {
+    "message": "Decoder: $DURATION$ ms · $WIDTH$ × $HEIGHT$ px",
+    "placeholders": {
+      "duration": { "content": "$1" }, "width": { "content": "$2" }, "height": { "content": "$3" }
+    }
+  },
+  "optionsTitle": { "message": "QR Snip settings" },
+  "onboardingTitle": { "message": "Before your first scan" },
+  "onboardingIntro": { "message": "Four things to know about how QR Snip works." },
+  "onboardingEducationLabel": { "message": "How QR Snip works" },
+  "onboardingActivateTitle": { "message": "Activate on demand" },
+  "onboardingActivateDescription": { "message": "Use the toolbar button or Ctrl+Shift+Q, then drag around a QR code. Nothing runs on the page before you activate it." },
+  "onboardingPrivacyTitle": { "message": "Processing stays local" },
+  "onboardingPrivacyDescription": { "message": "The visible tab is captured only for the current scan. Images and decoded values are never uploaded or saved." },
+  "onboardingPreviewTitle": { "message": "You decide what happens" },
+  "onboardingPreviewDescription": { "message": "Every result is shown before an action. Links never open automatically, and suspicious destinations show their warning signals first." },
+  "onboardingRestrictedTitle": { "message": "Some pages are restricted" },
+  "onboardingRestrictedDescription": { "message": "Browsers block extensions on settings, store, and other protected pages. Open the content in a regular tab when scanning is unavailable." },
+  "themeSettingLabel": { "message": "Theme" },
+  "themeSettingDescription": { "message": "Follow your device appearance or keep the scanner light or dark." },
+  "themeSystemOption": { "message": "Use system setting" },
+  "themeLightOption": { "message": "Light" },
+  "themeDarkOption": { "message": "Dark" },
+  "closeAfterCopyLabel": { "message": "Close after copying" },
+  "closeAfterCopyDescription": { "message": "Dismiss the scan overlay after a value is copied successfully." },
+  "decoderDiagnosticsLabel": { "message": "Show decoder diagnostics" },
+  "decoderDiagnosticsDescription": { "message": "Show local scan time and selected pixel dimensions with results. Payloads and page details are never included." },
+  "settingsPrivacyTitle": { "message": "Settings only" },
+  "settingsPrivacyDescription": { "message": "QR Snip stores these preferences locally. Screenshots, decoded values, and browsing activity are never stored." },
+  "resetSettingsAction": { "message": "Restore defaults" },
+  "settingsSavedStatus": { "message": "Saved" },
+  "settingsResetStatus": { "message": "Defaults restored" }
 }

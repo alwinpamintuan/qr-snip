@@ -27,6 +27,13 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     border: 0 !important;
   }
 
+  .decoder-diagnostics {
+    margin: -2px 2px 4px;
+    color: var(--qr-on-surface-variant);
+    font-size: var(--qr-typography-caption-size);
+    font-variant-numeric: tabular-nums;
+  }
+
   .qr-snip-app {
     position: fixed;
     inset: 0;

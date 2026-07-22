@@ -169,7 +169,7 @@ flowchart LR
     R -->|"Explicit allow-listed Open"| B
 ```
 
-The extension requests only `activeTab` and `scripting`. It declares no persistent host permissions, storage permission, clipboard permission, remote hosts, persistent content scripts, externally connectable endpoint, or web-accessible runtime asset.
+The extension requests only `activeTab`, `scripting`, and `storage`. Storage is limited to versioned preferences; it never contains screenshots, decoded payloads, URLs, or browsing activity. QR Snip declares no persistent host permissions, clipboard permission, remote hosts, persistent content scripts, externally connectable endpoint, or web-accessible runtime asset.
 
 ## Repository structure
 
@@ -177,6 +177,7 @@ The extension requests only `activeTab` and `scripting`. It declares no persiste
 entrypoints/
   background.ts              Privileged capture, injection, and navigation coordinator
   snipper.content.ts         Runtime-injected content-script composition root
+  options/                   Extension-owned onboarding and settings page
 src/
   application/               Scan workflow orchestration
   core/                      Decoding, geometry, messages, and result classification

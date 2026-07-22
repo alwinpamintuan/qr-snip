@@ -90,6 +90,9 @@ export const THEME_TOKEN_STYLES = String.raw`
   }
 
   @media (prefers-color-scheme: dark) {
-    :host { ${tokensToCssDeclarations(DARK_TOKENS)} }
+    :host(:not([data-theme="light"])) { ${tokensToCssDeclarations(DARK_TOKENS)} }
   }
+
+  :host([data-theme="light"]) { ${tokensToCssDeclarations(LIGHT_TOKENS)} color-scheme: light; }
+  :host([data-theme="dark"]) { ${tokensToCssDeclarations(DARK_TOKENS)} color-scheme: dark; }
 `;

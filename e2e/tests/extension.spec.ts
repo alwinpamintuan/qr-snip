@@ -35,6 +35,7 @@ test('browser action activates one real extension overlay across reinvocation', 
 });
 
 async function triggerAction(): Promise<void> {
+  await fixturePage.bringToFront();
   const { targetInfos } = await browserSession.send('Target.getTargets', {
     filter: [{ type: 'tab', exclude: false }],
   }) as {
@@ -63,4 +64,27 @@ test('component gallery exposes deterministic visual states', async ({}, testInf
     });
   }
   await gallery.close();
+});
+
+test('onboarding explains the privacy model and options persist locally', async ({}, testInfo) => {
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options.html?onboarding=1`);
+  await expect(options.getByRole('heading', { name: 'QR Snip settings' })).toBeVisible();
+  await expect(options.getByRole('heading', { name: 'Before your first scan' })).toBeVisible();
+  await expect(options.getByText('Processing stays local')).toBeVisible();
+  await expect(options.getByText('You decide what happens')).toBeVisible();
+
+  await options.getByLabel('Theme').selectOption('dark');
+  await options.getByLabel('Show decoder diagnostics').check();
+  await expect(options.getByRole('status')).toHaveText('Saved');
+  await options.reload();
+  await expect(options.getByLabel('Theme')).toHaveValue('dark');
+  await expect(options.getByLabel('Show decoder diagnostics')).toBeChecked();
+  await options.goto(`chrome-extension://${extensionId}/options.html`);
+  await expect(options.getByRole('heading', { name: 'Before your first scan' })).toHaveCount(0);
+  await testInfo.attach('settings-dark', {
+    body: await options.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
+  await options.close();
 });

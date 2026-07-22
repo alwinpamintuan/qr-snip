@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const targets = ['chrome-mv3', 'firefox-mv3'];
-const expectedPermissions = ['activeTab', 'scripting'];
+const expectedPermissions = ['activeTab', 'scripting', 'storage'];
 const maxContentBundleBytes = 220_000;
 
 for (const target of targets) {
