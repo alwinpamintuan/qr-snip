@@ -86,11 +86,11 @@ No QR Snip content script or overlay runs on the page. The extension stores no p
 
 ### State B — preparing
 
-After toolbar or shortcut activation, the background captures the visible tab and injects the runtime content bundle. Capture occurs before the overlay is drawn. On a restricted or failed page, the toolbar receives a temporary red `!` badge and a recovery message.
+After toolbar or shortcut activation, the background starts the visible-tab capture while it probes for an existing runtime listener and injects the dormant content bundle only when needed. The overlay is never mounted until capture finishes, so QR Snip remains absent from its own screenshot. On a restricted or failed page, the toolbar receives a temporary red `!` badge and a recovery message.
 
 ### State C — selecting
 
-The captured frame is frozen and dimmed. A floating instruction pill says “Drag around a QR code,” and a visible Keyboard selection action creates a centered rectangle. Pointer drag reveals a rounded selection with a live width × height label. In keyboard mode, arrows move, Shift+Arrow resizes, Alt increases the step, Enter scans, and a throttled live region announces geometry. Escape and the close button cancel.
+The captured frame is frozen and dimmed. A floating instruction pill gives “Drag around a QR code” primary emphasis and offers a compact “Press K for keyboard selection” text action. Pointer drag reveals a rounded selection with a live width × height label. Pressing K or activating the text action creates a centered rectangle; arrows move it, Shift+Arrow resizes, Alt increases the step, Enter scans, and a throttled live region announces geometry. Escape and the close button cancel.
 
 ### State D — decoding
 
@@ -126,7 +126,7 @@ Design changes must preserve decoded-value readability, destination emphasis, fo
 | ID | Requirement | Acceptance |
 | --- | --- | --- |
 | FR-01 | Explicit activation | Toolbar click and command start a scan on an ordinary HTTP(S) page; no persistent content script is declared |
-| FR-02 | Screen capture | Capture occurs before overlay injection and contains only the visible tab |
+| FR-02 | Screen capture | Capture completes before the overlay mounts and contains only the visible tab; a concurrently prepared content listener performs no DOM mutation before `START_CAPTURE` |
 | FR-03 | Selection | Every pointer drag direction works; crop is clamped to the viewport; tiny drags are rejected |
 | FR-04 | Decode | The documented fixture corpus decodes locally at or above the release threshold with zero negative-corpus false positives |
 | FR-05 | Retry | A failed selection can be retried and another area can be scanned without dismissing or recapturing |

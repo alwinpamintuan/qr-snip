@@ -4,6 +4,9 @@ import { createActionButton as createButtonPrimitive, createIconButton, createSt
 import { createIcon, type IconName } from './icons';
 import { SNIPPER_STYLES } from './snipper-styles';
 
+let sharedStyleSheet: CSSStyleSheet | null | undefined;
+let sharedLayoutTemplate: HTMLTemplateElement | undefined;
+
 export type ResultAction = Readonly<{
   label: string;
   icon?: IconName;
@@ -40,9 +43,9 @@ export class SnipperView {
   private root: ShadowRoot | null = null;
   private screenshot: HTMLImageElement | null = null;
   private selection: HTMLElement | null = null;
+  private selectionLabel: HTMLElement | null = null;
   private resultCard: HTMLElement | null = null;
   private toast: HTMLElement | null = null;
-  private screenshotUrl = '';
   private toastTimer: number | null = null;
   private announcementTimer: number | null = null;
   private returnFocus: HTMLElement | null = null;
@@ -71,7 +74,6 @@ export class SnipperView {
 
   mount(screenshotUrl: string, callbacks: SnipperViewCallbacks): void {
     this.unmount();
-    this.screenshotUrl = screenshotUrl;
     this.host = document.createElement('div');
     this.host.id = `qr-snip-${browser.runtime.id}`;
     Object.assign(this.host.style, {
@@ -87,8 +89,10 @@ export class SnipperView {
 
     this.screenshot = this.root.querySelector('.snapshot');
     this.selection = this.root.querySelector('.selection');
+    this.selectionLabel = this.root.querySelector('.selection-label');
     this.resultCard = this.root.querySelector('.result-card');
     this.toast = this.root.querySelector('.toast');
+    if (this.selection) this.selection.style.backgroundImage = `url("${screenshotUrl}")`;
     this.screenshot?.addEventListener('load', callbacks.onSnapshotReady, { once: true });
     this.screenshot?.addEventListener('error', callbacks.onSnapshotError, { once: true });
     if (this.screenshot) this.screenshot.src = screenshotUrl;
@@ -104,13 +108,11 @@ export class SnipperView {
       top: `${rect.y}px`,
       width: `${rect.width}px`,
       height: `${rect.height}px`,
-      backgroundImage: `url("${this.screenshotUrl}")`,
       backgroundPosition: `${-rect.x}px ${-rect.y}px`,
     });
     this.selection.classList.add('visible');
     this.selection.setAttribute('aria-hidden', 'false');
-    const label = this.selection.querySelector('.selection-label');
-    if (label) label.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+    if (this.selectionLabel) this.selectionLabel.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
   }
 
   resetSelection(): void {
@@ -171,10 +173,6 @@ export class SnipperView {
     if (button) button.disabled = false;
   }
 
-  focusKeyboardAction(): void {
-    this.root?.querySelector<HTMLButtonElement>('[data-action="keyboard"]')?.focus();
-  }
-
   focusSelectionSurface(): void {
     this.selectionSurface.focus();
   }
@@ -217,6 +215,7 @@ export class SnipperView {
     this.root = null;
     this.screenshot = null;
     this.selection = null;
+    this.selectionLabel = null;
     this.resultCard = null;
     this.toast = null;
     this.returnFocus = null;
@@ -225,10 +224,14 @@ export class SnipperView {
   private installStyles(): void {
     if (!this.root) return;
     try {
-      const sheet = new CSSStyleSheet();
-      sheet.replaceSync(SNIPPER_STYLES);
-      this.root.adoptedStyleSheets = [sheet];
+      if (sharedStyleSheet === undefined) {
+        sharedStyleSheet = new CSSStyleSheet();
+        sharedStyleSheet.replaceSync(SNIPPER_STYLES);
+      }
+      if (!sharedStyleSheet) throw new Error('Constructed stylesheets are unavailable.');
+      this.root.adoptedStyleSheets = [sharedStyleSheet];
     } catch {
+      sharedStyleSheet = null;
       const style = document.createElement('style');
       style.textContent = SNIPPER_STYLES;
       this.root.append(style);
@@ -236,8 +239,8 @@ export class SnipperView {
   }
 
   private createLayout(): DocumentFragment {
-    const template = document.createElement('template');
-    template.innerHTML = `
+    sharedLayoutTemplate ??= document.createElement('template');
+    if (!sharedLayoutTemplate.innerHTML) sharedLayoutTemplate.innerHTML = `
       <main class="qr-snip-app" role="application" tabindex="-1">
         <img class="snapshot" alt="" draggable="false">
         <div class="scrim"></div>
@@ -288,7 +291,7 @@ export class SnipperView {
         </section>
         <div class="toast" role="status" aria-live="polite"></div>
       </main>`;
-    const fragment = template.content;
+    const fragment = sharedLayoutTemplate.content.cloneNode(true) as DocumentFragment;
     const t = this.i18n.t;
     const app = fragment.querySelector<HTMLElement>('.qr-snip-app')!;
     app.dir = this.i18n.direction;
@@ -303,9 +306,15 @@ export class SnipperView {
     fragment.querySelector<HTMLElement>('.risk-heading strong')!.textContent = t('riskHeading');
     fragment.querySelector('[data-icon="qr"]')?.append(createIcon('qr'));
     fragment.querySelector('[data-icon="warning"]')?.append(createIcon('warning'));
-    const keyboardButton = createButtonPrimitive(t('keyboardSelectionAction'), 'tonal', () => undefined, 'keyboard');
+    const keyboardButton = createButtonPrimitive(t('keyboardSelectionAction'), 'text', () => undefined);
     keyboardButton.dataset.action = 'keyboard';
     keyboardButton.classList.add('keyboard-action');
+    keyboardButton.setAttribute('aria-label', t('keyboardSelectionAction'));
+    keyboardButton.querySelector('span')?.classList.add('keyboard-action-label');
+    const shortLabel = document.createElement('span');
+    shortLabel.className = 'keyboard-action-short';
+    shortLabel.textContent = t('keyboardSelectionActionShort');
+    keyboardButton.append(shortLabel);
     keyboardButton.disabled = true;
     fragment.querySelector('[data-component="keyboard"]')?.replaceWith(keyboardButton);
     fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton(t('cancelSnipLabel'), 'close', 'close'));

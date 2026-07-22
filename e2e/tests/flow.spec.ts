@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function completeKeyboardSelection(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Keyboard selection' }).click();
+  await page.keyboard.press('k');
   await page.keyboard.press('Alt+ArrowRight');
   await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Enter');
@@ -9,7 +9,9 @@ async function completeKeyboardSelection(page: Page): Promise<void> {
 
 test('@critical decodes, previews, copies, and opens only after an explicit action', async ({ page }) => {
   await page.goto('/harness/');
-  await expect(page.getByRole('button', { name: 'Keyboard selection' })).toBeFocused();
+  await expect(page.getByText('Drag around a QR code')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Press K for keyboard selection' })).toBeVisible();
+  await expect(page.locator('.qr-snip-app')).toBeFocused();
   await completeKeyboardSelection(page);
 
   await expect(page.getByRole('heading', { name: 'QR code found' })).toBeVisible();
@@ -61,7 +63,7 @@ test('retry, Escape, and focus containment preserve a keyboard-only flow', async
 test('long pseudo-localized RTL content remains operable', async ({ page }) => {
   await page.setViewportSize({ width: 420, height: 720 });
   await page.goto('/harness/?pseudo=long&dir=rtl&scenario=suspicious');
-  await page.getByRole('button', { name: /Keyboard selection/ }).click();
+  await page.keyboard.press('k');
   await page.keyboard.press('Enter');
 
   const dialog = page.getByRole('dialog');

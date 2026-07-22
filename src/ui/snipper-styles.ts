@@ -36,7 +36,10 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     user-select: none;
     touch-action: none;
     isolation: isolate;
-    animation: qr-app-enter 240ms var(--qr-motion-decelerate) both;
+  }
+
+  .qr-snip-app:focus {
+    outline: none;
   }
 
   .snapshot {
@@ -46,9 +49,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     height: 100%;
     object-fit: fill;
     pointer-events: none;
-    filter: brightness(0.52) saturate(0.72);
-    transform: scale(1);
-    animation: qr-snapshot-settle 500ms var(--qr-motion-decelerate) both;
   }
 
   .scrim {
@@ -58,7 +58,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
       radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--qr-primary) 8%, transparent), transparent 42%),
       var(--qr-scrim);
     pointer-events: none;
-    animation: qr-scrim-in 320ms ease-out both;
+    animation: qr-scrim-in 140ms ease-out both;
   }
 
   .top-bar {
@@ -77,9 +77,8 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     box-shadow: var(--qr-elevation-floating);
     cursor: default;
     transform: translateX(-50%);
-    backdrop-filter: blur(18px);
     transform-origin: 50% 0;
-    animation: qr-enter 420ms var(--qr-motion-decelerate) both;
+    animation: qr-enter 180ms var(--qr-motion-decelerate) both;
   }
 
   .brand-mark {
@@ -91,7 +90,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     background: var(--qr-primary-container);
     border-radius: 11px 16px 11px 16px;
     box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-primary) 24%, transparent);
-    animation: qr-mark-enter 560ms var(--qr-motion-decelerate) 80ms both;
+    animation: qr-mark-enter 220ms var(--qr-motion-decelerate) both;
   }
 
   .brand-mark svg,
@@ -537,8 +536,25 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   .keyboard-action {
     flex: 0 0 auto;
     min-height: 44px;
-    padding-inline: 14px;
+    padding-inline: 8px;
+    color: var(--qr-on-surface-variant);
+    background: transparent;
+    border-radius: var(--qr-shapes-small);
+    box-shadow: none;
+    font-size: var(--qr-typography-label-size);
+    font-weight: 650;
     white-space: nowrap;
+  }
+
+  .keyboard-action:hover {
+    color: var(--qr-primary);
+    background: color-mix(in srgb, var(--qr-primary) 8%, transparent);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .keyboard-action-short {
+    display: none;
   }
 
   .keyboard-action:disabled {
@@ -610,14 +626,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     100% { transform: scale(1); }
   }
 
-  @keyframes qr-app-enter {
-    from { opacity: 0; }
-  }
-
-  @keyframes qr-snapshot-settle {
-    from { opacity: .72; transform: scale(1.018); filter: brightness(.68) saturate(.86); }
-  }
-
   @keyframes qr-scrim-in {
     from { opacity: 0; }
   }
@@ -672,8 +680,9 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     .top-bar { top: 12px; width: calc(100vw - 24px); }
     .instruction { min-width: 0; flex: 1; }
     .instruction span { display: none; }
-    .keyboard-action { width: 44px; padding: 0; }
-    .keyboard-action span { position: fixed; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .keyboard-action { padding-inline: 8px; }
+    .keyboard-action-label { display: none; }
+    .keyboard-action-short { display: inline; }
     .result-card { padding: 20px; border-radius: 28px 28px 28px 10px; }
     .result-actions { display: grid; grid-template-columns: 1fr 1fr; }
     .action-button:last-child:nth-child(odd) { grid-column: 1 / -1; }

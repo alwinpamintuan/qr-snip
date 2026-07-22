@@ -73,7 +73,8 @@
   "failureNavigationRace": { "message": "The page changed while QR Snip was starting. Try again on the current page." },
   "failureTabClosed": { "message": "The tab closed before QR Snip could start." },
   "failureExtensionInvalidated": { "message": "QR Snip was updated. Reload the page and try again." },
-  "keyboardSelectionAction": { "message": "Keyboard selection" },
+  "keyboardSelectionAction": { "message": "Press K for keyboard selection" },
+  "keyboardSelectionActionShort": { "message": "Press K" },
   "keyboardSelectionHint": { "message": "Arrow keys move · Shift resizes · Alt moves faster · Enter scans" },
   "keyboardSelectionStarted": { "message": "Keyboard selection ready" },
   "selectionAnnouncement": {

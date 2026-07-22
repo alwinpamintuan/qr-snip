@@ -57,7 +57,7 @@ export const LIGHT_TOKENS: DesignTokenSet = {
     'surface-high': '#ede7ef', 'on-surface': '#1e1a20', 'on-surface-variant': '#4c454f',
     outline: '#7d747f', error: '#ba1a1a', warning: '#815500', 'on-warning': '#ffffff',
     'warning-container': '#ffdea5', 'on-warning-container': '#2a1800', shadow: 'rgba(28, 19, 31, .34)',
-    scrim: 'rgba(13, 10, 15, .3)', selection: '#f1d7ff', 'selection-outline': 'rgba(48, 16, 66, .65)',
+    scrim: 'rgba(13, 10, 15, .54)', selection: '#f1d7ff', 'selection-outline': 'rgba(48, 16, 66, .65)',
     'selection-highlight': 'rgba(255, 255, 255, .42)', white: '#ffffff',
   },
   ...shared,
@@ -71,7 +71,7 @@ export const DARK_TOKENS: DesignTokenSet = {
     'surface-high': '#2b272c', 'on-surface': '#f3e9f2', 'on-surface-variant': '#d6cad6',
     outline: '#a99daa', error: '#ffb4ab', warning: '#ffb95c', 'on-warning': '#452b00',
     'warning-container': '#624000', 'on-warning-container': '#ffdea5', shadow: 'rgba(0, 0, 0, .58)',
-    scrim: 'rgba(0, 0, 0, .46)', selection: '#e5c6fa', 'selection-outline': 'rgba(12, 3, 16, .85)',
+    scrim: 'rgba(0, 0, 0, .58)', selection: '#e5c6fa', 'selection-outline': 'rgba(12, 3, 16, .85)',
     'selection-highlight': 'rgba(255, 255, 255, .3)', white: '#ffffff',
   },
 };

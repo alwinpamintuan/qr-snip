@@ -13,7 +13,7 @@ export const MESSAGE_KEYS = [
   'riskInternationalizedDomain', 'riskIpAddress', 'riskLocalNetwork', 'riskUnusualPort',
   'failureRestrictedPage', 'failurePermissionExpired', 'failureCaptureFailed',
   'failureInjectionFailed', 'failureNavigationRace', 'failureTabClosed',
-  'failureExtensionInvalidated', 'keyboardSelectionAction', 'keyboardSelectionHint',
+  'failureExtensionInvalidated', 'keyboardSelectionAction', 'keyboardSelectionActionShort', 'keyboardSelectionHint',
   'keyboardSelectionStarted', 'selectionAnnouncement', 'galleryTitle', 'galleryEyebrow',
   'galleryHero', 'galleryDescription', 'galleryActions', 'galleryStatus',
   'galleryResultSurface', 'galleryReady', 'galleryPreview', 'galleryExampleResult',

@@ -70,7 +70,7 @@ export class SnipperApplication {
     this.gesture?.attach();
     this.view.enableKeyboardSelection();
     this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
-    this.view.focusKeyboardAction();
+    this.view.focusSelectionSurface();
   }
 
   private async scan(selection: SelectionRect): Promise<void> {
@@ -203,7 +203,7 @@ export class SnipperApplication {
       this.beginKeyboardSelection();
     } else {
       this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
-      this.view.focusKeyboardAction();
+      this.view.focusSelectionSurface();
     }
   }
 
@@ -248,6 +248,12 @@ export class SnipperApplication {
       event.preventDefault();
       event.stopPropagation();
       this.destroy();
+      return;
+    }
+    if (!this.keyboardMode && event.key.toLowerCase() === 'k' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.beginKeyboardSelection();
       return;
     }
     const handled = this.keyboardSelection?.handleKeyDown(event, {
