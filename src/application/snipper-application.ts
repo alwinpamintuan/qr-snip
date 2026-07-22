@@ -34,6 +34,7 @@ export class SnipperApplication {
     });
     this.gesture = new SelectionGesture(this.view.selectionSurface, {
       onChange: (selection) => {
+        this.view.setKeyboardSelectionActionVisible(true);
         this.keyboardMode = false;
         this.keyboardSelection?.cancel();
         this.view.showSelection(selection);
@@ -202,6 +203,7 @@ export class SnipperApplication {
     if (this.keyboardMode) {
       this.beginKeyboardSelection();
     } else {
+      this.view.setKeyboardSelectionActionVisible(true);
       this.view.setInstruction(this.t('dragInstruction'), this.t('cancelHint'));
       this.view.focusSelectionSurface();
     }
@@ -212,6 +214,7 @@ export class SnipperApplication {
     this.keyboardMode = true;
     this.gesture?.cancel();
     this.view.resetSelection();
+    this.view.setKeyboardSelectionActionVisible(false);
     this.view.setInstruction(this.t('keyboardSelectionStarted'), this.t('keyboardSelectionHint'));
     this.keyboardSelection?.start({ width: window.innerWidth, height: window.innerHeight });
     this.view.focusSelectionSurface();

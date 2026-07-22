@@ -90,7 +90,7 @@ After toolbar or shortcut activation, the background starts the visible-tab capt
 
 ### State C — selecting
 
-The captured frame is frozen and dimmed. A floating instruction pill gives “Drag around a QR code” primary emphasis and offers a compact “Press K for keyboard selection” text action. Pointer drag reveals a rounded selection with a live width × height label. Pressing K or activating the text action creates a centered rectangle; arrows move it, Shift+Arrow resizes, Alt increases the step, Enter scans, and a throttled live region announces geometry. Escape and the close button cancel.
+The captured frame is frozen and dimmed. A floating instruction pill gives “Drag around a QR code” primary emphasis and offers a compact “Select with keyboard” action with a separate K keycap. Pointer drag reveals a rounded selection with a live width × height label. Pressing K or activating the text action creates a centered rectangle and removes the now-redundant action; arrows move, Shift+Arrow resizes, Alt increases the step, Enter scans, and a throttled live region announces geometry. Escape and the close button cancel.
 
 ### State D — decoding
 

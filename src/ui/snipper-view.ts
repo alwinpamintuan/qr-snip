@@ -173,6 +173,11 @@ export class SnipperView {
     if (button) button.disabled = false;
   }
 
+  setKeyboardSelectionActionVisible(visible: boolean): void {
+    const button = this.root?.querySelector<HTMLButtonElement>('[data-action="keyboard"]');
+    if (button) button.hidden = !visible;
+  }
+
   focusSelectionSurface(): void {
     this.selectionSurface.focus();
   }
@@ -310,11 +315,14 @@ export class SnipperView {
     keyboardButton.dataset.action = 'keyboard';
     keyboardButton.classList.add('keyboard-action');
     keyboardButton.setAttribute('aria-label', t('keyboardSelectionAction'));
+    keyboardButton.setAttribute('aria-keyshortcuts', 'K');
+    keyboardButton.title = t('keyboardSelectionAction');
     keyboardButton.querySelector('span')?.classList.add('keyboard-action-label');
-    const shortLabel = document.createElement('span');
-    shortLabel.className = 'keyboard-action-short';
-    shortLabel.textContent = t('keyboardSelectionActionShort');
-    keyboardButton.append(shortLabel);
+    const shortcut = document.createElement('kbd');
+    shortcut.className = 'keyboard-shortcut';
+    shortcut.setAttribute('aria-hidden', 'true');
+    shortcut.textContent = t('keyboardSelectionShortcut');
+    keyboardButton.append(shortcut);
     keyboardButton.disabled = true;
     fragment.querySelector('[data-component="keyboard"]')?.replaceWith(keyboardButton);
     fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton(t('cancelSnipLabel'), 'close', 'close'));

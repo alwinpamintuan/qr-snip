@@ -534,6 +534,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   }
 
   .keyboard-action {
+    gap: 7px;
     flex: 0 0 auto;
     min-height: 44px;
     padding-inline: 8px;
@@ -553,7 +554,24 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     transform: none;
   }
 
-  .keyboard-action-short {
+  .keyboard-shortcut {
+    display: grid;
+    min-width: 24px;
+    height: 24px;
+    padding-inline: 6px;
+    place-items: center;
+    color: var(--qr-on-surface);
+    background: var(--qr-surface-high);
+    border: 1px solid color-mix(in srgb, var(--qr-outline) 30%, transparent);
+    border-radius: 7px;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--qr-white) 50%, transparent) inset;
+    font-family: var(--qr-typography-font-family);
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .keyboard-action[hidden] {
     display: none;
   }
 
@@ -682,7 +700,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     .instruction span { display: none; }
     .keyboard-action { padding-inline: 8px; }
     .keyboard-action-label { display: none; }
-    .keyboard-action-short { display: inline; }
     .result-card { padding: 20px; border-radius: 28px 28px 28px 10px; }
     .result-actions { display: grid; grid-template-columns: 1fr 1fr; }
     .action-button:last-child:nth-child(odd) { grid-column: 1 / -1; }

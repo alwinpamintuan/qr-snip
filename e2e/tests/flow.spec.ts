@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function completeKeyboardSelection(page: Page): Promise<void> {
   await page.keyboard.press('k');
+  await expect(page.getByRole('button', { name: 'Select with keyboard' })).toBeHidden();
   await page.keyboard.press('Alt+ArrowRight');
   await page.keyboard.press('Shift+ArrowDown');
   await page.keyboard.press('Enter');
@@ -10,7 +11,7 @@ async function completeKeyboardSelection(page: Page): Promise<void> {
 test('@critical decodes, previews, copies, and opens only after an explicit action', async ({ page }) => {
   await page.goto('/harness/');
   await expect(page.getByText('Drag around a QR code')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Press K for keyboard selection' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Select with keyboard' })).toBeVisible();
   await expect(page.locator('.qr-snip-app')).toBeFocused();
   await completeKeyboardSelection(page);
 
