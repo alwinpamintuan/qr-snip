@@ -8,7 +8,7 @@ This is the ordered delivery plan from the working application to a store-ready 
 | --- | --- | --- |
 | Current application baseline | Implemented | Unit tests and Chromium/Firefox production builds |
 | Phase 1 reliability hardening | Implementation complete; manual validation open | [QA.md](QA.md#current-validation-status) |
-| Phase 2 browser coverage, design system, keyboard selection, i18n | Planned | Complete each subsection's acceptance criteria |
+| Phase 2 browser coverage, design system, keyboard selection, i18n | Implementation complete; manual validation open | Automated gates and validation record in [QA.md](QA.md#phase-2-automated-validation-record) |
 | Phase 3 options, interpreters, packaging, release automation | Planned | Complete each subsection's acceptance criteria |
 | Post-1.0 compatibility and barcode work | Candidate features | [ROADMAP.md](ROADMAP.md) promotion checklist |
 
@@ -117,7 +117,11 @@ Acceptance:
 
 Target: closed beta.
 
+Status: implementation complete. The automated acceptance gates below are enforced; manual assistive-technology and supported-browser matrix checks remain in [QA.md](QA.md).
+
 ### 2.1 End-to-end browser tests
+
+Status: implemented by `8f1bdb1`; the recorded 400-case stress run measured a 0.5% first-attempt infrastructure flake rate.
 
 Implementation:
 
@@ -135,6 +139,8 @@ Acceptance:
 
 ### 2.2 Material 3 Expressive token system
 
+Status: implemented by `9360d52`; palette sources and contrast measurements are in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
 Implementation:
 
 1. Move colors, typography, shapes, elevation, state layers, and motion into typed token modules/CSS custom properties.
@@ -151,6 +157,8 @@ Acceptance:
 
 ### 2.3 Keyboard-accessible selection
 
+Status: implemented by `cbba856`; manual NVDA and VoiceOver evaluation remains a release check.
+
 Implementation:
 
 1. On activation, provide a visible “Keyboard selection” action or initial centered rectangle.
@@ -166,6 +174,8 @@ Acceptance:
 - Focus returns predictably when retrying and never escapes into the frozen page while a modal is shown.
 
 ### 2.4 Internationalization foundation
+
+Status: implemented by `7bea7b7`; English is the only shipped locale, with typed runtime keys and automated long-string/RTL coverage ready for additional translations.
 
 Implementation:
 

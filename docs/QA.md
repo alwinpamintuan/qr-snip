@@ -15,13 +15,15 @@ pnpm check
 
 1. strict TypeScript validation;
 2. all Vitest unit and fixture tests;
-3. a Chromium Manifest V3 production build;
-4. a Firefox Manifest V3 production build; and
-5. generated-manifest and inline-worker packaging assertions.
+3. typed WebExtension locale-catalog validation;
+4. Chromium and Firefox Manifest V3 production builds;
+5. generated-manifest and inline-worker packaging assertions;
+6. deterministic browser-harness generation and Firefox `web-ext` validation; and
+7. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
 
 The manifest assertion requires exactly `activeTab` and `scripting`, no host permissions, no persistent content scripts, no external messaging, and no web-accessible runtime assets. A production change must not be accepted based on the Chromium build alone.
 
-Browser end-to-end automation, bundle-size budgets, archive inspection, dependency review, SBOM generation, and store submission checks are tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) and should be added to the required gate when implemented.
+Bundle-size budgets, archive inspection, dependency review, SBOM generation, and store submission checks remain tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## Current validation status
 
@@ -35,13 +37,17 @@ The repository currently provides reproducible automated evidence for:
 - protocol rejection, Unicode edge whitespace, control characters, private destinations, punycode, credentials, unusual ports, display truncation, and runtime-message guards;
 - successful Chromium and Firefox MV3 builds with only `activeTab` and `scripting`; and
 - inline decoder-worker packaging with transferable RGBA buffers and no exposed worker asset.
+- real Chromium action activation, capture/injection, Escape, and rapid reinvocation;
+- Chromium and Firefox happy, suspicious-link, copy, explicit-open, retry, keyboard, focus-containment, long-string, and RTL flows;
+- static image, canvas, paused-video poster, transformed element, hostile CSS, and DOM-mutation fixture surfaces; and
+- light, dark, increased-contrast, narrow, and 200% text component-gallery screenshots generated only from synthetic content.
 
 The following release evidence still requires a real browser and representative hardware:
 
 - profile 4K selections and confirm page main-thread tasks stay below 100 ms;
 - compare heap after the first and fifth repeated scan, targeting no more than 10% post-cleanup growth;
 - cancel an active decode with Escape in current Chrome, Edge, Firefox, and Firefox ESR;
-- invoke QR Snip twice rapidly and confirm only the latest overlay remains usable;
+- repeat rapid reinvocation in Chrome, Edge, Firefox, and Firefox ESR outside the automated Chromium target;
 - exercise restricted-page recovery messages on browser-owned pages and extension stores; and
 - complete security-reviewer sign-off for the threat table and residual risks in [SECURITY.md](SECURITY.md).
 
@@ -57,9 +63,22 @@ Do not describe browser coverage, performance, memory behavior, or security revi
 | Payload normalization and protocol allow list | `tests/result.test.ts` |
 | Link warning heuristics | `tests/link-security.test.ts` |
 | Runtime message shape guards | `tests/messages.test.ts` |
+| Typed locale registry and pseudo/RTL behavior | `tests/i18n.test.ts`, `scripts/assert-locales.mjs` |
+| Keyboard movement and resize semantics | `tests/selection.test.ts`, `tests/keyboard-selection.test.ts` |
 | Generated browser permissions and worker packaging | `scripts/assert-manifest.mjs` |
+| Chromium extension action/reinvocation and component states | `e2e/tests/extension.spec.ts` |
+| Chromium/Firefox critical and accessibility flows | `e2e/tests/flow.spec.ts` |
+| Hostile and mutating page surfaces | `e2e/tests/fixture-gallery.spec.ts` |
 
-Add tests at the narrowest deterministic boundary. Browser behavior that cannot be represented faithfully in Vitest belongs in the manual matrix until browser automation covers it.
+Add tests at the narrowest deterministic boundary. Browser behavior not represented faithfully by Vitest or the deterministic Playwright harness remains in the manual matrix.
+
+## Phase 2 automated validation record
+
+| Date | Platform | Engines | Commit | Result | Operator |
+| --- | --- | --- | --- | --- | --- |
+| 2026-07-22 | Windows | Playwright Chromium 149, Firefox 151 | `8f1bdb1` | Normal gate: 12/12 passed. Stress gate: 398/400 first attempts passed; one process crash per engine under four-worker load, 0.5% combined flake rate. | Codex implementation run |
+
+The `web-ext` validator reports one Firefox Android compatibility warning because Firefox Android added `data_collection_permissions` after the declared desktop minimum. Android is not a supported target; desktop Firefox packaging has zero validator errors. The normal CI suite uses up to two retries for browser-process recovery and uploads only synthetic Playwright evidence on failure.
 
 ## Manual browser matrix
 

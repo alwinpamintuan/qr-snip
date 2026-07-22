@@ -10,7 +10,7 @@ This document describes the implemented architecture and the constraints contrib
 | Manifest | MV3 for Chromium and Firefox | Keeps one current permission and service-worker model across supported browsers |
 | UI | Vanilla DOM in a closed Shadow Root | Keeps the injected bundle small and isolates controls from arbitrary page styles |
 | Decoder | `jsQR` in an inline Web Worker | Performs local decoding off the page's main thread without exposing a separate worker asset |
-| Tests | Vitest | Runs fast tests against pure TypeScript and RGBA decoder modules |
+| Tests | Vitest + Playwright + web-ext | Tests pure modules, deterministic cross-browser flows, the real Chromium action path, and Firefox packaging |
 | Package manager | pnpm | Provides a deterministic lockfile and efficient local installation |
 
 Do not introduce a UI framework only for the overlay. An extension-owned options or onboarding page can make an independent framework decision if its complexity justifies the additional runtime and maintenance cost.
@@ -131,8 +131,10 @@ Application cleanup aborts active decoding, terminates the worker, detaches poin
 - `src/ui/selection-gesture.ts`: pointer capture and selection callbacks; it contains no decoding or navigation decisions.
 - `src/ui/keyboard-selection.ts`: keyboard command adapter over the shared pure selection geometry; it contains no decoding or presentation decisions.
 - `src/ui/snipper-view.ts`: closed Shadow DOM construction, accessible status/result rendering, actions, toast, and contained copy fallback.
-- `src/ui/snipper-styles.ts`: Material 3 Expressive colors, shapes, layout, state layers, responsive behavior, and motion preferences.
-- `src/ui/icons.ts`: trusted internal SVG icon markup. Decoded values never enter this path.
+- `src/ui/theme-tokens.ts`: typed Material color, typography, shape, elevation, and motion roles emitted as CSS custom properties.
+- `src/ui/components.ts`: reusable icon/button/status/pill/result/toast DOM primitives.
+- `src/ui/snipper-styles.ts`: token-driven expressive layout, state layers, responsive behavior, and motion preferences.
+- `src/ui/icons.ts`: typed SVG DOM factory backed only by reviewed internal path data. Decoded values never enter this path.
 - `src/workers/qr-decoder.worker.ts`: reconstructs the transferred RGBA view, runs the pure pipeline, and returns only the request ID, value, or local error category.
 
 ## 5. Decoder pipeline and resource budgets

@@ -137,6 +137,8 @@ Temporary Firefox installations are removed when Firefox closes.
 | `pnpm typecheck` | Run strict TypeScript validation without emitting files |
 | `pnpm test` | Run all Vitest tests once |
 | `pnpm test:watch` | Run Vitest in watch mode |
+| `pnpm test:e2e` | Build, validate, and run Chromium/Firefox browser coverage |
+| `pnpm test:e2e:stability` | Repeat both critical flows 100 times per browser engine |
 | `pnpm fixtures:generate` | Regenerate the deterministic QR fixture corpus and manifest |
 | `pnpm build` | Produce the Chromium MV3 extension |
 | `pnpm build:firefox` | Produce the Firefox MV3 extension |
@@ -144,13 +146,13 @@ Temporary Firefox installations are removed when Firefox closes.
 | `pnpm permissions:check` | Inspect existing build manifests and decoder-worker packaging |
 | `pnpm zip` | Create the Chromium store archive |
 | `pnpm zip:firefox` | Create the Firefox AMO archive |
-| `pnpm check` | Typecheck, test, build both targets, and verify generated permissions |
+| `pnpm check` | Run type, unit, locale, build, permission, Firefox, and browser gates |
 
 Run `pnpm check` before submitting a change. `pnpm permissions:check` expects both production builds to exist; `pnpm check` creates them first.
 
 ## Technical overview
 
-QR Snip is built with WXT and strict TypeScript. The background worker owns privileged WebExtension operations. A runtime-injected content script owns the frozen capture, selection gesture, result preview, and application orchestration. Pixel decoding runs in an inline worker, while geometry, message validation, result classification, and link assessment remain pure modules covered by Vitest.
+QR Snip is built with WXT and strict TypeScript. The background worker owns privileged WebExtension operations. A runtime-injected content script owns the frozen capture, pointer/keyboard selection, result preview, and application orchestration. Pixel decoding runs in an inline worker, while geometry, message validation, result classification, and link assessment remain pure modules covered by Vitest. Playwright covers the real Chromium action path and deterministic Chromium/Firefox application flows.
 
 ```mermaid
 flowchart LR
@@ -176,10 +178,12 @@ src/
   application/               Scan workflow orchestration
   core/                      Decoding, geometry, messages, and result classification
   security/                  Side-effect-free destination risk assessment
-  ui/                        Material 3 Expressive view, styles, gestures, and icons
+  i18n/                      Typed WebExtension runtime message adapter
+  ui/                        Material 3 Expressive tokens, primitives, view, gestures, and icons
   workers/                   Transferable-buffer QR decoder worker
 scripts/                     Fixture generation and generated-manifest assertions
 tests/                       Unit, security, geometry, and decoder-corpus tests
+e2e/                         Synthetic fixture gallery, browser harness, and Playwright flows
 docs/                        Product, architecture, QA, security, delivery, and roadmap docs
 .github/                     CI, release automation, dependency updates, and community templates
 public/icons/                Extension and toolbar brand assets
@@ -191,7 +195,7 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and c
 
 - Only the visible viewport is captured; off-screen page content is not included.
 - Protected video or DRM surfaces may appear blank in browser captures.
-- Pointer dragging is currently required to define the scan area. Escape and result actions are keyboard-accessible, but keyboard-controlled selection remains planned work.
+- Pointer dragging and keyboard-controlled selection are supported; manual NVDA and VoiceOver validation remains required for release sign-off.
 - The scanner handles one conventional QR code per selection.
 - Some browser or operating-system shortcut assignments may override the default shortcut. Use the browser's extension shortcut settings to change it.
 - QR Snip does not fetch redirects, page titles, favicons, product records, or remote reputation data.

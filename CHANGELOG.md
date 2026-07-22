@@ -4,6 +4,18 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 
 ## [Unreleased]
 
+### Added
+
+- Keyboard-controlled selection with accelerated movement, resizing, live geometry announcements, and dialog focus containment
+- Typed WebExtension localization foundation, external English catalog, pseudo-long/RTL tests, and separate store copy
+- Typed Material 3 Expressive tokens, reusable DOM primitives, sanitized icon factory, and local visual component gallery
+- Playwright Chromium/Firefox flow coverage, real Chromium action activation, synthetic hostile-page fixtures, Firefox package validation, and Windows/Linux CI browser gates
+
+### Changed
+
+- Refined the overlay with stronger expressive shape contrast, state hierarchy, elevation, and responsive behavior
+- Promoted browser automation and locale validation into the required `pnpm check` gate
+
 ## [0.1.0] - 2026-07-22
 
 ### Added
