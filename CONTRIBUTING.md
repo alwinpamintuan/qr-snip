@@ -57,13 +57,13 @@ The host page, screenshot pixels, runtime messages, and decoded payload must all
 
 ## Testing changes
 
-During development, run the narrowest relevant test in watch mode. Before submitting, run the complete gate:
+During development, run the narrowest relevant test in watch mode. `pnpm check` is the fast local gate for types, deterministic unit tests, and locales. Decoder changes should also run `pnpm test:corpus`. Before submitting, run the complete gate:
 
 ```bash
-pnpm check
+pnpm check:full
 ```
 
-The gate performs strict type checking, all Vitest tests, Chromium and Firefox production builds, and generated-manifest assertions.
+The full gate adds Chromium and Firefox production builds, generated-manifest assertions, Firefox package validation, and browser automation.
 
 Add tests with the change:
 
@@ -157,7 +157,7 @@ Before requesting review, confirm:
 
 - [ ] The behavior and scope are documented.
 - [ ] New logic has focused tests.
-- [ ] `pnpm check` passes.
+- [ ] `pnpm check:full` passes.
 - [ ] Chromium and Firefox behavior was tested or the gap is stated.
 - [ ] Permissions and generated manifests remain intentional.
 - [ ] No screenshot, payload, URL, or sensitive data is logged or persisted.

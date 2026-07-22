@@ -136,6 +136,8 @@ Temporary Firefox installations are removed when Firefox closes.
 | `pnpm dev:firefox` | Run a Firefox MV3 development build |
 | `pnpm typecheck` | Run strict TypeScript validation without emitting files |
 | `pnpm test` | Run all Vitest tests once |
+| `pnpm test:unit` | Run the fast deterministic suite without the image corpus |
+| `pnpm test:corpus` | Run the decoder accuracy and false-positive fixture corpus |
 | `pnpm test:watch` | Run Vitest in watch mode |
 | `pnpm test:e2e` | Build, validate, and run Chromium/Firefox browser coverage |
 | `pnpm test:e2e:stability` | Repeat both critical flows 100 times per browser engine |
@@ -146,9 +148,10 @@ Temporary Firefox installations are removed when Firefox closes.
 | `pnpm permissions:check` | Inspect existing build manifests and decoder-worker packaging |
 | `pnpm zip` | Create the Chromium store archive |
 | `pnpm zip:firefox` | Create the Firefox AMO archive |
-| `pnpm check` | Run type, unit, locale, build, permission, Firefox, and browser gates |
+| `pnpm check` | Run the fast type, deterministic unit, and locale development gate |
+| `pnpm check:full` | Add both production builds, permission/package validation, and browser coverage |
 
-Run `pnpm check` before submitting a change. `pnpm permissions:check` expects both production builds to exist; `pnpm check` creates them first.
+Use `pnpm check` while developing and run `pnpm check:full` before submitting a change. `pnpm permissions:check` expects both production builds to exist; the full gate creates them first.
 
 ## Technical overview
 
@@ -158,9 +161,9 @@ QR Snip is built with WXT and strict TypeScript. The background worker owns priv
 flowchart LR
     U["Toolbar or shortcut"] --> B["Background worker"]
     B --> C["Capture visible tab"]
-    B --> I["Inject snipper content script"]
-    C --> I
-    I --> S["Closed-Shadow-DOM selection UI"]
+    B --> P["Probe or prepare dormant listener"]
+    C --> S["Mount closed-Shadow-DOM selection UI"]
+    P --> S
     S --> W["Bounded decoder worker"]
     W --> R["Preview and safety assessment"]
     R -->|"Explicit allow-listed Open"| B

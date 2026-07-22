@@ -34,7 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Verify tagged source
-        run: pnpm check
+        run: pnpm check:full
 
       - name: Build browser archives
         run: |

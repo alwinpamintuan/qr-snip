@@ -49,7 +49,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium firefox
 
       - name: Run repository checks
-        run: pnpm check
+        run: pnpm check:full
 
       - name: Retain synthetic browser-test evidence on failure
         if: failure()

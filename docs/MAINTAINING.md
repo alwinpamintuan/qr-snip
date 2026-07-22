@@ -80,7 +80,7 @@ Under **Settings → Actions → General**:
 2. Confirm workflow permissions allow the tagged release workflow to request `contents: write`.
 3. Keep pull-request workflows from forks on the default restricted token and approval policy.
 
-The CI workflow runs `pnpm check` on Ubuntu and Windows. The release workflow runs only for `v*` tags, rebuilds and verifies the source, creates both browser archives and SHA-256 checksums, and opens a draft GitHub release. It never publishes the draft automatically.
+The CI workflow runs `pnpm check:full` on Ubuntu and Windows. The release workflow runs only for `v*` tags, rebuilds and verifies the source, creates both browser archives and SHA-256 checksums, and opens a draft GitHub release. It never publishes the draft automatically.
 
 ## Main-branch ruleset
 
@@ -103,7 +103,7 @@ Before tagging a release:
 
 1. Choose a semantic version and update `package.json`; `wxt.config.ts` reads that version into both generated manifests.
 2. Move relevant entries from `[Unreleased]` in `CHANGELOG.md` into a dated version section and restore an empty `[Unreleased]` section.
-3. Run `pnpm install --frozen-lockfile` and `pnpm check` from a clean checkout.
+3. Run `pnpm install --frozen-lockfile` and `pnpm check:full` from a clean checkout.
 4. Complete the manual browser, accessibility, performance, memory, and security checks in [QA.md](QA.md).
 5. Load the production Chromium build in Chrome or Brave and the Firefox build as a temporary add-on.
 6. Confirm the generated manifests, version, icon assets, permissions, and archive contents.

@@ -14,7 +14,9 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 ### Changed
 
 - Refined the overlay with stronger expressive shape contrast, state hierarchy, elevation, and responsive behavior
-- Promoted browser automation and locale validation into the required `pnpm check` gate
+- Reduced activation work by removing duplicate decoder code, overlapping capture with dormant injection, and reusing injected listeners
+- Prioritized drag selection with a compact “Press K” keyboard affordance and lighter entrance effects
+- Split the fast `pnpm check` development loop from the comprehensive `pnpm check:full` browser and packaging gate
 
 ## [0.1.0] - 2026-07-22
 

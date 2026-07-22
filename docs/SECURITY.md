@@ -86,7 +86,7 @@ Developers must not:
 
 Before every store release:
 
-1. Run `pnpm check` and inspect both generated manifests for permissions, content scripts, web-accessible resources, and externally connectable endpoints.
+1. Run `pnpm check:full` and inspect both generated manifests for permissions, content scripts, web-accessible resources, and externally connectable endpoints.
 2. Search runtime bundles for `fetch`, XHR, WebSocket, analytics SDKs, and remote URLs.
 3. Fuzz result classification with mixed case, whitespace, control characters, long inputs, encoded URLs, Unicode domains, IPv4 variants, IPv6, and malformed mail/tel values.
 4. Confirm every navigation passes through `isAllowedOpenUrl` in the background.

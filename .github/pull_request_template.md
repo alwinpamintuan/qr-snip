@@ -5,7 +5,7 @@ Describe the user or developer problem and the resulting behavior.
 ## Validation
 
 - [ ] Added or updated focused tests
-- [ ] Ran `pnpm check`
+- [ ] Ran `pnpm check:full`
 - [ ] Tested Chromium behavior, or documented why it was not required
 - [ ] Tested Firefox behavior, or documented why it was not required
 

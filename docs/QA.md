@@ -4,26 +4,30 @@ This plan defines the automated and manual evidence expected for QR Snip changes
 
 ## Automated gates
 
-Run the complete local gate with:
+Run the fast development gate with:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm check
 ```
 
-`pnpm check` performs:
+`pnpm check` performs strict TypeScript validation, deterministic Vitest unit tests, and typed locale-catalog validation. The slower image corpus stays outside the edit loop. Run the complete pre-submit and CI gate with:
 
-1. strict TypeScript validation;
-2. all Vitest unit and fixture tests;
-3. typed WebExtension locale-catalog validation;
-4. Chromium and Firefox Manifest V3 production builds;
-5. generated-manifest and inline-worker packaging assertions;
-6. deterministic browser-harness generation and Firefox `web-ext` validation; and
-7. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
+```bash
+pnpm check:full
+```
 
-The manifest assertion requires exactly `activeTab` and `scripting`, no host permissions, no persistent content scripts, no external messaging, and no web-accessible runtime assets. A production change must not be accepted based on the Chromium build alone.
+`pnpm check:full` adds:
 
-Bundle-size budgets, archive inspection, dependency review, SBOM generation, and store submission checks remain tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+1. decoder accuracy and false-positive fixture-corpus validation;
+2. Chromium and Firefox Manifest V3 production builds;
+3. generated-manifest and inline-worker packaging assertions;
+4. deterministic browser-harness generation and Firefox `web-ext` validation; and
+5. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
+
+The manifest assertion requires exactly `activeTab` and `scripting`, no host permissions, no persistent content scripts, no external messaging, no web-accessible runtime assets, and a runtime content bundle no larger than 220,000 bytes. The size budget prevents worker-only decoder code from returning to the page-executed startup path. A production change must not be accepted based on the Chromium build alone.
+
+Archive inspection, dependency review, SBOM generation, and store submission checks remain tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## Current validation status
 
@@ -139,7 +143,7 @@ The post-1.0 styled-code corpus is specified in [ROADMAP.md](ROADMAP.md). Every 
 ## Accessibility checks
 
 - Escape closes the selection and result states.
-- The Keyboard selection action receives focus after activation; arrows move, Shift+Arrow resizes, Alt changes the step, and Enter scans.
+- The drag-first selection surface receives focus after activation; K or the compact keyboard text action enters keyboard mode, arrows move, Shift+Arrow resizes, Alt changes the step, and Enter scans.
 - Selection geometry announcements are understandable and throttled with NVDA and VoiceOver.
 - Result controls are reachable in a logical order and focus moves into the dialog.
 - Tab and Shift+Tab remain contained within the result dialog, and retry returns focus to the active selection mode.
@@ -184,7 +188,7 @@ Follow the full checklist in [SECURITY.md](SECURITY.md). At minimum, each releas
 ## Release smoke test
 
 1. Start from a clean clone and frozen dependency install.
-2. Run `pnpm check`.
+2. Run `pnpm check:full`.
 3. Load `.output/chrome-mv3/` in a supported Chromium browser.
 4. Load `.output/firefox-mv3/manifest.json` as a Firefox temporary add-on.
 5. Test one conventional URL, one suspicious URL, one text value, one inverted code, and one failed selection fixture.

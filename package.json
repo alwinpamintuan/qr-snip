@@ -25,6 +25,8 @@
     "zip:firefox": "wxt zip -b firefox --mv3",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude tests/fixture-corpus.test.ts",
+    "test:corpus": "vitest run tests/fixture-corpus.test.ts",
     "test:watch": "vitest",
     "e2e:prepare": "vite build --config e2e/vite.config.ts",
     "e2e:firefox:lint": "web-ext lint --source-dir .output/firefox-mv3",
@@ -32,7 +34,8 @@
     "test:e2e": "pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
     "test:e2e:stability": "pnpm e2e:prepare && playwright test --project=chromium-harness --project=firefox-harness --grep \"@critical\" --repeat-each=100 --workers=4 --retries=1",
     "fixtures:generate": "node scripts/generate-qr-fixtures.mjs",
-    "check": "pnpm typecheck && pnpm test && pnpm locales:check && pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
+    "check": "pnpm typecheck && pnpm test:unit && pnpm locales:check",
+    "check:full": "pnpm check && pnpm test:corpus && pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
