@@ -20,6 +20,7 @@
     "build:firefox": "wxt build -b firefox --mv3",
     "build:all": "pnpm build && pnpm build:firefox",
     "permissions:check": "node scripts/assert-manifest.mjs",
+    "bundle:check": "node scripts/assert-bundle-budget.mjs",
     "locales:check": "node scripts/assert-locales.mjs",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox --mv3",
@@ -34,8 +35,12 @@
     "test:e2e": "pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
     "test:e2e:stability": "pnpm e2e:prepare && playwright test --project=chromium-harness --project=firefox-harness --grep \"@critical\" --repeat-each=100 --workers=4 --retries=1",
     "fixtures:generate": "node scripts/generate-qr-fixtures.mjs",
+    "audit:prod": "pnpm audit --prod --audit-level high",
+    "release:package": "pnpm build:all && node scripts/package-release.mjs && node scripts/generate-sbom.mjs && node scripts/generate-release-metadata.mjs",
+    "release:inspect": "node scripts/inspect-release-archives.mjs",
+    "release:verify": "pnpm release:package && pnpm permissions:check && pnpm bundle:check && pnpm release:inspect",
     "check": "pnpm typecheck && pnpm test:unit && pnpm locales:check",
-    "check:full": "pnpm check && pnpm test:corpus && pnpm build:all && pnpm permissions:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
+    "check:full": "pnpm check && pnpm test:corpus && pnpm build:all && pnpm permissions:check && pnpm bundle:check && pnpm e2e:prepare && pnpm e2e:firefox:lint && pnpm test:e2e:browser",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -55,8 +60,8 @@
     "wxt": "^0.20.11"
   },
   "engines": {
-    "node": ">=22.13.0",
-    "pnpm": ">=9.0.0"
+    "node": "22.13.0",
+    "pnpm": "11.9.0"
   },
   "packageManager": "pnpm@11.9.0"
 }

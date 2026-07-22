@@ -10,62 +10,86 @@ const isOnboarding = new URLSearchParams(location.search).get('onboarding') === 
 
 document.title = t('optionsTitle');
 document.documentElement.dir = i18n.direction;
-app.innerHTML = `
-  <header class="page-heading">
-    <h1>${escapeHtml(t('optionsTitle'))}</h1>
-    <span class="status" role="status" aria-live="polite"></span>
-  </header>
-  <main>
-    ${isOnboarding ? educationMarkup() : ''}
-    <section class="settings" aria-label="${escapeHtml(t('optionsTitle'))}">
-      <label class="field select-field">
-        <span><strong>${escapeHtml(t('themeSettingLabel'))}</strong><small>${escapeHtml(t('themeSettingDescription'))}</small></span>
-        <select name="theme">
-          <option value="system">${escapeHtml(t('themeSystemOption'))}</option>
-          <option value="light">${escapeHtml(t('themeLightOption'))}</option>
-          <option value="dark">${escapeHtml(t('themeDarkOption'))}</option>
-        </select>
-      </label>
-      ${toggleMarkup('closeAfterCopy', t('closeAfterCopyLabel'), t('closeAfterCopyDescription'))}
-      ${toggleMarkup('decoderDiagnostics', t('decoderDiagnosticsLabel'), t('decoderDiagnosticsDescription'))}
-      <div class="privacy-note"><strong>${escapeHtml(t('settingsPrivacyTitle'))}</strong><span>${escapeHtml(t('settingsPrivacyDescription'))}</span></div>
-      <button class="reset-button" type="button">${escapeHtml(t('resetSettingsAction'))}</button>
-    </section>
-  </main>`;
 
-const theme = app.querySelector<HTMLSelectElement>('[name="theme"]')!;
-const closeAfterCopy = app.querySelector<HTMLInputElement>('[name="closeAfterCopy"]')!;
-const decoderDiagnostics = app.querySelector<HTMLInputElement>('[name="decoderDiagnostics"]')!;
-const status = app.querySelector<HTMLElement>('.status')!;
+const heading = document.createElement('header');
+heading.className = 'page-heading';
+const title = document.createElement('h1');
+title.textContent = t('optionsTitle');
+const status = document.createElement('span');
+status.className = 'status';
+status.setAttribute('role', 'status');
+status.setAttribute('aria-live', 'polite');
+heading.append(title, status);
+
+const main = document.createElement('main');
+if (isOnboarding) main.append(createEducation());
+const settings = document.createElement('section');
+settings.className = 'settings';
+settings.setAttribute('aria-label', t('optionsTitle'));
+
+const theme = document.createElement('select');
+theme.name = 'theme';
+for (const [value, key] of [
+  ['system', 'themeSystemOption'], ['light', 'themeLightOption'], ['dark', 'themeDarkOption'],
+] as const) {
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = t(key);
+  theme.append(option);
+}
+const themeField = createSettingField(t('themeSettingLabel'), t('themeSettingDescription'));
+themeField.classList.add('select-field');
+themeField.append(theme);
+
+const closeAfterCopy = createToggle(
+  'closeAfterCopy', t('closeAfterCopyLabel'), t('closeAfterCopyDescription'),
+);
+const decoderDiagnostics = createToggle(
+  'decoderDiagnostics', t('decoderDiagnosticsLabel'), t('decoderDiagnosticsDescription'),
+);
+const privacyNote = document.createElement('div');
+privacyNote.className = 'privacy-note';
+const privacyTitle = document.createElement('strong');
+privacyTitle.textContent = t('settingsPrivacyTitle');
+const privacyDescription = document.createElement('span');
+privacyDescription.textContent = t('settingsPrivacyDescription');
+privacyNote.append(privacyTitle, privacyDescription);
+const resetButton = document.createElement('button');
+resetButton.className = 'reset-button';
+resetButton.type = 'button';
+resetButton.textContent = t('resetSettingsAction');
+settings.append(themeField, closeAfterCopy.field, decoderDiagnostics.field, privacyNote, resetButton);
+main.append(settings);
+app.replaceChildren(heading, main);
+
 let statusTimer: number | undefined;
-
 void loadSettings(browser.storage.local).then(renderSettings);
 theme.addEventListener('change', () => void persist());
-closeAfterCopy.addEventListener('change', () => void persist());
-decoderDiagnostics.addEventListener('change', () => void persist());
-app.querySelector('.reset-button')?.addEventListener('click', () => {
-  void resetSettings(browser.storage.local).then((settings) => {
-    renderSettings(settings);
+closeAfterCopy.input.addEventListener('change', () => void persist());
+decoderDiagnostics.input.addEventListener('change', () => void persist());
+resetButton.addEventListener('click', () => {
+  void resetSettings(browser.storage.local).then((value) => {
+    renderSettings(value);
     showStatus(t('settingsResetStatus'));
   });
 });
 
 async function persist(): Promise<void> {
-  const settings: Settings = {
+  const value: Settings = {
     version: DEFAULT_SETTINGS.version,
     theme: theme.value as ThemePreference,
-    closeAfterCopy: closeAfterCopy.checked,
-    decoderDiagnostics: decoderDiagnostics.checked,
+    closeAfterCopy: closeAfterCopy.input.checked,
+    decoderDiagnostics: decoderDiagnostics.input.checked,
   };
-  await saveSettings(browser.storage.local, settings);
+  await saveSettings(browser.storage.local, value);
   showStatus(t('settingsSavedStatus'));
 }
 
-function renderSettings(settings: Settings): void {
-  theme.value = settings.theme;
-  closeAfterCopy.checked = settings.closeAfterCopy;
-  decoderDiagnostics.checked = settings.decoderDiagnostics;
-  document.documentElement.dataset.theme = settings.theme;
+function renderSettings(value: Settings): void {
+  theme.value = value.theme;
+  closeAfterCopy.input.checked = value.closeAfterCopy;
+  decoderDiagnostics.input.checked = value.decoderDiagnostics;
+  document.documentElement.dataset.theme = value.theme;
 }
 
 function showStatus(message: string): void {
@@ -74,27 +98,64 @@ function showStatus(message: string): void {
   statusTimer = window.setTimeout(() => { status.textContent = ''; }, 2200);
 }
 
-function educationMarkup(): string {
-  const cards = [
+function createEducation(): HTMLElement {
+  const section = document.createElement('section');
+  section.className = 'onboarding';
+  section.setAttribute('aria-labelledby', 'onboarding-title');
+  const heading = document.createElement('h2');
+  heading.id = 'onboarding-title';
+  heading.textContent = t('onboardingTitle');
+  const intro = document.createElement('p');
+  intro.textContent = t('onboardingIntro');
+  const cards = document.createElement('div');
+  cards.className = 'education';
+  cards.setAttribute('aria-label', t('onboardingEducationLabel'));
+  const content = [
     ['①', t('onboardingActivateTitle'), t('onboardingActivateDescription')],
     ['②', t('onboardingPrivacyTitle'), t('onboardingPrivacyDescription')],
     ['③', t('onboardingPreviewTitle'), t('onboardingPreviewDescription')],
     ['④', t('onboardingRestrictedTitle'), t('onboardingRestrictedDescription')],
   ];
-  return `<section class="onboarding" aria-labelledby="onboarding-title">
-    <h2 id="onboarding-title">${escapeHtml(t('onboardingTitle'))}</h2>
-    <p>${escapeHtml(t('onboardingIntro'))}</p>
-    <div class="education" aria-label="${escapeHtml(t('onboardingEducationLabel'))}">${cards.map(([number, title, description]) => `
-    <article><span aria-hidden="true">${number}</span><h3>${escapeHtml(title!)}</h3><p>${escapeHtml(description!)}</p></article>`).join('')}</div>
-  </section>`;
+  cards.append(...content.map(([number, cardTitle, description]) => {
+    const article = document.createElement('article');
+    const marker = document.createElement('span');
+    marker.setAttribute('aria-hidden', 'true');
+    marker.textContent = number!;
+    const title = document.createElement('h3');
+    title.textContent = cardTitle!;
+    const copy = document.createElement('p');
+    copy.textContent = description!;
+    article.append(marker, title, copy);
+    return article;
+  }));
+  section.append(heading, intro, cards);
+  return section;
 }
 
-function toggleMarkup(name: string, label: string, description: string): string {
-  return `<label class="field toggle-field"><span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(description)}</small></span><input type="checkbox" name="${name}"><i aria-hidden="true"></i></label>`;
+function createSettingField(label: string, description: string): HTMLLabelElement {
+  const field = document.createElement('label');
+  field.className = 'field';
+  const copy = document.createElement('span');
+  const title = document.createElement('strong');
+  title.textContent = label;
+  const detail = document.createElement('small');
+  detail.textContent = description;
+  copy.append(title, detail);
+  field.append(copy);
+  return field;
 }
 
-function escapeHtml(value: string): string {
-  const span = document.createElement('span');
-  span.textContent = value;
-  return span.innerHTML;
+function createToggle(name: string, label: string, description: string): Readonly<{
+  field: HTMLLabelElement;
+  input: HTMLInputElement;
+}> {
+  const field = createSettingField(label, description);
+  field.classList.add('toggle-field');
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.name = name;
+  const indicator = document.createElement('i');
+  indicator.setAttribute('aria-hidden', 'true');
+  field.append(input, indicator);
+  return { field, input };
 }

@@ -1,4 +1,4 @@
-name: Draft release
+name: Draft release and store submission
 
 on:
   push:
@@ -6,52 +6,151 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  NODE_VERSION: 22.13.0
+  PNPM_VERSION: 11.9.0
 
 jobs:
   release:
-    name: Build draft release
+    name: Build traceable release
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: Check out tagged source
         uses: actions/checkout@v7
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
         with:
-          version: 11.9.0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
         with:
-          node-version: 22.13
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+      - run: pnpm install --frozen-lockfile
       - name: Verify tagged source
         run: pnpm check:full
-
-      - name: Build browser archives
-        run: |
-          pnpm zip
-          pnpm zip:firefox
-
-      - name: Create checksums
-        working-directory: .output
-        run: sha256sum *.zip > SHA256SUMS.txt
-
+      - name: Audit production dependencies
+        run: pnpm audit:prod
+      - name: Build deterministic release artifacts
+        run: pnpm release:package
+      - name: Inspect archives and checksums
+        run: pnpm release:inspect
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: .output/releases/*.zip
+      - name: Attest SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: .output/releases/*.zip
+          sbom-path: .output/releases/sbom.cdx.json
+      - name: Retain release artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: qr-snip-${{ github.ref_name }}
+          path: .output/releases/
+          retention-days: 90
       - name: Create draft GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          release_flags=(--draft --generate-notes --verify-tag --title "QR Snip ${GITHUB_REF_NAME}")
+          release_flags=(--draft --verify-tag --title "QR Snip ${GITHUB_REF_NAME}" --notes-file .output/releases/RELEASE_NOTES.md)
           if [[ "${GITHUB_REF_NAME}" == v0.* ]]; then
             release_flags+=(--prerelease)
           fi
-          gh release create "${GITHUB_REF_NAME}" .output/*.zip .output/SHA256SUMS.txt "${release_flags[@]}"
+          gh release create "${GITHUB_REF_NAME}" .output/releases/* "${release_flags[@]}"
+
+  submit-chrome:
+    name: Submit Chrome Web Store
+    if: vars.ENABLE_STORE_SUBMISSIONS == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    environment: chrome-web-store
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${GITHUB_REF_NAME}" --dir .output/releases
+      - name: Submit after environment approval
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: pnpm exec publish-extension --chrome-zip ".output/releases/qr-snip-${GITHUB_REF_NAME#v}-chrome-mv3.zip"
+
+  submit-edge:
+    name: Submit Edge Add-ons
+    if: vars.ENABLE_STORE_SUBMISSIONS == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    environment: edge-add-ons
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${GITHUB_REF_NAME}" --dir .output/releases
+      - name: Submit after environment approval
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: pnpm exec publish-extension --edge-zip ".output/releases/qr-snip-${GITHUB_REF_NAME#v}-chrome-mv3.zip"
+
+  submit-firefox:
+    name: Submit Firefox AMO
+    if: vars.ENABLE_STORE_SUBMISSIONS == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    environment: firefox-amo
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${GITHUB_REF_NAME}" --dir .output/releases
+      - name: Submit after environment approval
+        env:
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+        run: >-
+          pnpm exec publish-extension
+          --firefox-zip ".output/releases/qr-snip-${GITHUB_REF_NAME#v}-firefox-mv3.zip"
+          --firefox-sources-zip ".output/releases/qr-snip-${GITHUB_REF_NAME#v}-firefox-source.zip"

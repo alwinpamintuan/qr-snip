@@ -65,7 +65,7 @@ These heuristics do not claim to detect phishing. They add understandable contex
 | Screenshot contains sensitive data | Privacy exposure | In-memory only; no logs/storage/network; explicit activation; selected RGBA buffer transferred to a worker | Other extensions or a compromised browser are outside this boundary. Continue profiling data lifetime and heap cleanup. |
 | Oversized 4K/high-DPI image causes memory pressure | Tab instability | Visible viewport only; selected-crop canvas; 4,096-dimension and 4,000,000-pixel decode limits; worker cancellation | The full captured PNG remains in memory while the overlay is open. Profile representative high-DPI screens before each major release. |
 | Message spoofing by another extension/page | Unauthorized navigation | WebExtension runtime messaging is isolated; message shape and protocol are checked | If external messaging is ever added, authenticate sender and keep it disabled by default. |
-| Dependency compromise | Build/runtime compromise | Small dependency set, lockfile, review gates | Enable automated dependency review, pin CI runtime, inspect lockfile changes, and produce SBOM/provenance. |
+| Dependency compromise | Build/runtime compromise | Small runtime dependency set, frozen lockfile installs, production audit, pinned CI runtime, CycloneDX SBOM, and signed GitHub provenance | Registry advisories and build-platform trust remain external dependencies; inspect lockfile and attestation changes. |
 | Clipboard fallback exposes a value | Sensitive payload exposure | Prefer Clipboard API; fallback textarea is appended inside the closed Shadow Root and immediately removed | Browser or accessibility tooling may still observe clipboard operations. Keep copying user-triggered and never copy automatically. |
 
 ## Important design prohibitions
@@ -86,7 +86,7 @@ Developers must not:
 
 Before every store release:
 
-1. Run `pnpm check:full` and inspect both generated manifests for permissions, content scripts, web-accessible resources, and externally connectable endpoints.
+1. Run `pnpm check:full`, `pnpm audit:prod`, and `pnpm release:verify`; inspect both generated manifests and store archives for permissions, content scripts, web-accessible resources, externally connectable endpoints, development files, and secret-like material.
 2. Search runtime bundles for `fetch`, XHR, WebSocket, analytics SDKs, and remote URLs.
 3. Fuzz result interpretation with mixed case, whitespace, control characters, long inputs, encoded URLs, Unicode domains, IPv4 variants, IPv6, malformed mail/tel values, and malformed structured payloads.
 4. Confirm every navigation passes through `isAllowedOpenUrl` in the background.

@@ -9,7 +9,7 @@ This is the ordered delivery plan from the working application to a store-ready 
 | Current application baseline | Implemented | Unit tests and Chromium/Firefox production builds |
 | Phase 1 reliability hardening | Implementation complete; manual validation open | [QA.md](QA.md#current-validation-status) |
 | Phase 2 browser coverage, design system, keyboard selection, i18n | Implementation complete; manual validation open | Automated gates and validation record in [QA.md](QA.md#phase-2-automated-validation-record) |
-| Phase 3 options, interpreters, packaging, release automation | Planned | Complete each subsection's acceptance criteria |
+| Phase 3 options, interpreters, packaging, release automation | Implementation complete; manual store setup and release approval open | Automated gates and maintainer setup in [QA.md](QA.md) and [MAINTAINING.md](MAINTAINING.md) |
 | Post-1.0 compatibility and barcode work | Candidate features | [ROADMAP.md](ROADMAP.md) promotion checklist |
 
 ## Current baseline (completed)
@@ -196,6 +196,8 @@ Target: public beta.
 
 ### 3.1 Options and onboarding
 
+Status: implemented by `17db680`; first-run browser review remains part of release smoke testing.
+
 Implementation:
 
 1. Add an extension-owned options page; do not put settings in arbitrary host pages.
@@ -212,6 +214,8 @@ Acceptance:
 
 ### 3.2 Result interpreter registry
 
+Status: implemented by `e6a64b7`; structured summaries are pure, inactive, and covered in Chromium and Firefox harness flows.
+
 Implementation:
 
 1. Define a narrow `ResultInterpreter` interface: `matches(payload)` and `present(payload)`.
@@ -226,6 +230,8 @@ Acceptance:
 - Actions remain allow-listed and preview-first.
 
 ### 3.3 Packaging and CI/CD
+
+Status: implemented; protected GitHub environments and first store listings require maintainer configuration before submission is enabled.
 
 Implementation:
 

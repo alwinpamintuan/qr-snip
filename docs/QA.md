@@ -22,12 +22,13 @@ pnpm check:full
 1. decoder accuracy and false-positive fixture-corpus validation;
 2. Chromium and Firefox Manifest V3 production builds;
 3. generated-manifest and inline-worker packaging assertions;
-4. deterministic browser-harness generation and Firefox `web-ext` validation; and
-5. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
+4. per-entrypoint and total bundle budgets;
+5. deterministic browser-harness generation and Firefox `web-ext` validation; and
+6. Playwright tests for the real Chromium extension plus Chromium and Firefox application flows.
 
-The manifest assertion requires exactly `activeTab`, `scripting`, and settings-only `storage`, no host permissions, no persistent content scripts, no external messaging, no web-accessible runtime assets, and a runtime content bundle no larger than 220,000 bytes. The size budget prevents worker-only decoder code from returning to the page-executed startup path. A production change must not be accepted based on the Chromium build alone.
+The manifest assertion requires exactly `activeTab`, `scripting`, and settings-only `storage`, no host permissions, no persistent content scripts, no external messaging, and no web-accessible runtime assets. The separate bundle gate limits the runtime content bundle to 220,000 bytes and total unpacked target to 325,000 bytes; this prevents worker-only decoder code from returning to the page-executed startup path. A production change must not be accepted based on the Chromium build alone.
 
-Archive inspection, dependency review, SBOM generation, and store submission checks remain tracked in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+`pnpm release:verify` adds deterministic Chromium, Firefox, and Firefox-source archives, CycloneDX SBOM generation, release notes, provenance metadata, SHA-256 checksums, and archive inspection. `pnpm audit:prod` queries the package registry and fails on high or critical production advisories.
 
 ## Current validation status
 
@@ -44,7 +45,10 @@ The repository currently provides reproducible automated evidence for:
 - real Chromium action activation, capture/injection, Escape, and rapid reinvocation;
 - Chromium and Firefox happy, suspicious-link, copy, explicit-open, retry, keyboard, focus-containment, long-string, and RTL flows;
 - static image, canvas, paused-video poster, transformed element, hostile CSS, and DOM-mutation fixture surfaces; and
-- light, dark, increased-contrast, narrow, and 200% text component-gallery screenshots generated only from synthetic content.
+- light, dark, increased-contrast, narrow, and 200% text component-gallery screenshots generated only from synthetic content;
+- versioned settings migration, first-install-only education, and preference persistence;
+- pure ordered result interpreters with inactive Wi-Fi, vCard, calendar, and geo summaries;
+- deterministic ZIP generation, store-archive development-file rejection, SBOM/provenance generation, and checksum verification.
 
 The following release evidence still requires a real browser and representative hardware:
 
@@ -70,9 +74,11 @@ Do not describe browser coverage, performance, memory behavior, or security revi
 | Typed locale registry and pseudo/RTL behavior | `tests/i18n.test.ts`, `scripts/assert-locales.mjs` |
 | Keyboard movement and resize semantics | `tests/selection.test.ts`, `tests/keyboard-selection.test.ts` |
 | Generated browser permissions and worker packaging | `scripts/assert-manifest.mjs` |
+| Bundle size budgets | `scripts/assert-bundle-budget.mjs` |
 | Settings defaults, validation, and migration | `tests/settings.test.ts` |
 | First-run education and options persistence | `e2e/tests/extension.spec.ts` |
 | Result registry, structured summaries, and malformed fallback | `tests/result-interpreters.test.ts` |
+| Release ZIP reproducibility, metadata, and content policy | `scripts/package-release.mjs`, `scripts/inspect-release-archives.mjs` |
 | Chromium extension action/reinvocation and component states | `e2e/tests/extension.spec.ts` |
 | Chromium/Firefox critical and accessibility flows | `e2e/tests/flow.spec.ts` |
 | Hostile and mutating page surfaces | `e2e/tests/fixture-gallery.spec.ts` |
@@ -191,13 +197,13 @@ Follow the full checklist in [SECURITY.md](SECURITY.md). At minimum, each releas
 ## Release smoke test
 
 1. Start from a clean clone and frozen dependency install.
-2. Run `pnpm check:full`.
+2. Run `pnpm check:full`, `pnpm audit:prod`, and `pnpm release:verify`.
 3. Load `.output/chrome-mv3/` in a supported Chromium browser.
 4. Load `.output/firefox-mv3/manifest.json` as a Firefox temporary add-on.
 5. Test one conventional URL, one suspicious URL, one text value, one inverted code, and one failed selection fixture.
 6. Test Copy, allow-listed Open, Open anyway, Scan another, Try again, and Escape.
 7. Confirm generated manifests and archives contain no unreviewed permission, remote code, source fixture, test, debug log, or secret.
-8. Generate the Chromium and Firefox archives and inspect their contents.
+8. Verify the Chromium, Firefox, and Firefox-source archives, SBOM, provenance metadata, attestations, and checksums.
 9. Verify privacy, support, security-reporting, and store-listing material.
 10. Test the signed Firefox artifact when signing is part of the release.
 11. Record browser versions, commit SHA, artifact hashes, reviewer, failures, accepted residual risk, and date.

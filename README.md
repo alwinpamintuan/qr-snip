@@ -76,8 +76,8 @@ Browser-owned pages such as `chrome://`, `brave://`, `edge://`, extension stores
 
 ## Prerequisites and setup
 
-- Node.js 22.13 or newer
-- pnpm 9 or newer; the repository currently pins pnpm through `packageManager`
+- Node.js 22.13.0 (pinned in `.node-version` and CI)
+- pnpm 11.9.0 (pinned through `packageManager` and CI)
 
 Install the exact dependency graph from the lockfile:
 
@@ -146,12 +146,16 @@ Temporary Firefox installations are removed when Firefox closes.
 | `pnpm build:firefox` | Produce the Firefox MV3 extension |
 | `pnpm build:all` | Produce both browser targets |
 | `pnpm permissions:check` | Inspect existing build manifests and decoder-worker packaging |
-| `pnpm zip` | Create the Chromium store archive |
-| `pnpm zip:firefox` | Create the Firefox AMO archive |
+| `pnpm bundle:check` | Enforce per-entrypoint and total unpacked bundle budgets |
+| `pnpm release:package` | Build deterministic Chromium, Firefox, and Firefox-source ZIPs plus release metadata |
+| `pnpm release:inspect` | Reject unsafe or development-only store contents and verify checksums |
+| `pnpm release:verify` | Build and inspect the complete local release artifact set |
+| `pnpm audit:prod` | Fail on high/critical production dependency advisories |
+| `pnpm zip` / `pnpm zip:firefox` | Create ad hoc WXT archives; tagged releases use `release:package` |
 | `pnpm check` | Run the fast type, deterministic unit, and locale development gate |
 | `pnpm check:full` | Add both production builds, permission/package validation, and browser coverage |
 
-Use `pnpm check` while developing and run `pnpm check:full` before submitting a change. `pnpm permissions:check` expects both production builds to exist; the full gate creates them first.
+Use `pnpm check` while developing and run `pnpm check:full` before submitting a change. `pnpm permissions:check` and `pnpm bundle:check` expect both production builds to exist; the full gate creates them first. Maintainers run `pnpm release:verify` from a clean checkout before tagging.
 
 ## Technical overview
 

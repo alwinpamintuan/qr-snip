@@ -17,6 +17,11 @@ Do not introduce a UI framework only for the overlay. An extension-owned options
 
 Do not replace the decoder merely to expand a feature list. Any decoder change needs corpus evidence, false-positive analysis, bundle and memory measurements, browser parity, and a dependency-security review.
 
+Release packaging is intentionally separate from WXT's ad hoc ZIP commands. `scripts/package-release.mjs`
+sorts tracked/runtime files and applies the tagged commit timestamp to create byte-reproducible ZIPs.
+Inspection then rejects unsafe paths, development-only store contents, source maps, and secret-like
+material before checksums, SBOM, provenance metadata, or an attestation is published.
+
 ## 2. Dependency direction
 
 The runtime is divided by responsibility rather than browser surface alone:

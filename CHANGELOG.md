@@ -12,6 +12,7 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Playwright Chromium/Firefox flow coverage, real Chromium action activation, synthetic hostile-page fixtures, Firefox package validation, and Windows/Linux CI browser gates
 - First-run privacy education and an extension-owned settings page with versioned theme, close-after-copy, and local decoder-diagnostics preferences
 - Ordered result interpreters with inactive Wi-Fi, vCard, calendar, and geo summaries plus exact-text fallback for malformed payloads
+- Deterministic Chromium/Firefox packaging, archive inspection, bundle budgets, CycloneDX SBOM, checksums, provenance attestations, and protected per-store submission jobs
 
 ### Changed
 

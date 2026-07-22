@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 
 const targets = ['chrome-mv3', 'firefox-mv3'];
 const expectedPermissions = ['activeTab', 'scripting', 'storage'];
-const maxContentBundleBytes = 220_000;
 
 for (const target of targets) {
   const path = resolve('.output', target, 'manifest.json');
@@ -26,10 +25,6 @@ for (const target of targets) {
   }
 
   const contentBundle = await readFile(resolve('.output', target, 'content-scripts', 'snipper.js'), 'utf8');
-  const contentBundleBytes = Buffer.byteLength(contentBundle);
-  if (contentBundleBytes > maxContentBundleBytes) {
-    throw new Error(`${target} content bundle is ${contentBundleBytes} bytes; budget is ${maxContentBundleBytes}.`);
-  }
   if (!contentBundle.includes('createObjectURL') || !contentBundle.includes('Blob')) {
     throw new Error(`${target} content bundle does not contain the inline decoder worker bootstrap.`);
   }

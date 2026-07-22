@@ -77,10 +77,12 @@ Private reporting is required because `.github/SECURITY.md`, `SUPPORT.md`, the i
 Under **Settings → Actions → General**:
 
 1. Allow actions from GitHub and verified creators used by the committed workflows.
-2. Confirm workflow permissions allow the tagged release workflow to request `contents: write`.
+2. Confirm workflow permissions allow the tagged release workflow to request `contents: write`, `id-token: write`, `attestations: write`, and `artifact-metadata: write`.
 3. Keep pull-request workflows from forks on the default restricted token and approval policy.
 
-The CI workflow runs `pnpm check:full` on Ubuntu and Windows. The release workflow runs only for `v*` tags, rebuilds and verifies the source, creates both browser archives and SHA-256 checksums, and opens a draft GitHub release. It never publishes the draft automatically.
+The CI workflow separates quality, decoder corpus, production build/policy, cross-browser, dependency-audit, and release-package inspection jobs. All installs use the exact Node/pnpm versions and `--frozen-lockfile`. Pull-request jobs have read-only repository access and no publishing environments or credentials.
+
+The release workflow runs only for `v*` tags. It rebuilds and verifies the tagged source, creates deterministic Chromium, Firefox, and Firefox-source ZIPs, inspects archive contents, produces release notes, CycloneDX SBOM, provenance metadata, and SHA-256 checksums, creates GitHub attestations, and opens a draft GitHub release. It never publishes the draft automatically.
 
 ## Main-branch ruleset
 
@@ -88,7 +90,7 @@ After the first CI run succeeds, create a ruleset targeting `main`:
 
 - block force pushes and branch deletion;
 - require a pull request before merging when more than one maintainer is active;
-- require the `Quality (ubuntu-latest)` and `Quality (windows-latest)` status checks;
+- require both `Quality` checks plus `Decoder corpus`, `Build and policy`, both `Browser tests`, `Production dependency audit`, and `Reproducible package inspection`;
 - require branches to be up to date before merging;
 - dismiss stale approvals after new commits when review is required; and
 - allow an explicit maintainer bypass for repository recovery.
@@ -103,7 +105,7 @@ Before tagging a release:
 
 1. Choose a semantic version and update `package.json`; `wxt.config.ts` reads that version into both generated manifests.
 2. Move relevant entries from `[Unreleased]` in `CHANGELOG.md` into a dated version section and restore an empty `[Unreleased]` section.
-3. Run `pnpm install --frozen-lockfile` and `pnpm check:full` from a clean checkout.
+3. Run `pnpm install --frozen-lockfile`, `pnpm check:full`, `pnpm audit:prod`, and `pnpm release:verify` from a clean checkout.
 4. Complete the manual browser, accessibility, performance, memory, and security checks in [QA.md](QA.md).
 5. Load the production Chromium build in Chrome or Brave and the Firefox build as a temporary add-on.
 6. Confirm the generated manifests, version, icon assets, permissions, and archive contents.
@@ -116,7 +118,7 @@ git tag -a v0.1.0 -m "QR Snip v0.1.0"
 git push origin v0.1.0
 ```
 
-The tag workflow creates a draft release containing the Chromium archive, Firefox archive, Firefox source archive required for review, and `SHA256SUMS.txt`. Review the generated notes, installation wording, file names, checksums, and known limitations. Mark `v0.x` releases as pre-releases and publish the draft manually when satisfied.
+The tag workflow creates a draft release containing the Chromium archive, Firefox archive, Firefox source archive required for review, `RELEASE_NOTES.md`, `sbom.cdx.json`, `provenance.json`, and `SHA256SUMS.txt`. It also records signed GitHub build-provenance and SBOM attestations. Review the generated notes, installation wording, file names, checksums, attestations, and known limitations. Mark `v0.x` releases as pre-releases and publish the draft manually when satisfied.
 
 ## Release notes checklist
 
@@ -136,7 +138,18 @@ Do not describe unsigned archives as store-ready or one-click installers.
 
 ## Store publication
 
-When store listings exist:
+The automation updates existing store listings; each first listing and its identity must be created and reviewed manually. Before enabling submission:
+
+1. Create protected GitHub environments named `chrome-web-store`, `edge-add-ons`, and `firefox-amo`.
+2. Add required reviewers to every environment so each store job pauses for an explicit approval.
+3. Store only that store's credentials in its environment:
+   - Chrome: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`;
+   - Edge: `EDGE_PRODUCT_ID`, `EDGE_CLIENT_ID`, `EDGE_API_KEY`;
+   - Firefox: `FIREFOX_EXTENSION_ID`, `FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`.
+4. Confirm the Firefox manifest ID in `wxt.config.ts` matches the AMO listing before the first public package.
+5. Set the repository variable `ENABLE_STORE_SUBMISSIONS` to `true` only after all three protected environments are ready. Leave it unset to create draft releases without store jobs.
+
+Store credentials are scoped to the corresponding tag-only environment job and are never available to pull-request workflows. After store listings exist:
 
 - add verified Chrome Web Store and Firefox Add-ons links to the README;
 - replace the About website with a neutral landing page if both stores are supported;
