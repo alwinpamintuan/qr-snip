@@ -1,27 +1,10 @@
-export const SNIPPER_STYLES = String.raw`
+import { THEME_TOKEN_STYLES } from './theme-tokens';
+
+export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   :host {
     all: initial;
     color-scheme: light dark;
-    --qr-primary: #76558f;
-    --qr-on-primary: #ffffff;
-    --qr-primary-container: #f0dbff;
-    --qr-on-primary-container: #2d0b43;
-    --qr-surface: #fff7ff;
-    --qr-surface-container: #f3edf5;
-    --qr-surface-high: #ede7ef;
-    --qr-on-surface: #1e1a20;
-    --qr-on-surface-variant: #4c454f;
-    --qr-outline: #7d747f;
-    --qr-error: #ba1a1a;
-    --qr-warning: #815500;
-    --qr-on-warning: #ffffff;
-    --qr-warning-container: #ffdea5;
-    --qr-on-warning-container: #2a1800;
-    --qr-shadow: rgba(28, 19, 31, 0.28);
-    --qr-emphasized: cubic-bezier(.2, 0, 0, 1);
-    --qr-emphasized-decelerate: cubic-bezier(.05, .7, .1, 1);
-    --qr-standard: cubic-bezier(.2, 0, 0, 1);
-    font-family: Inter, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: var(--qr-typography-font-family);
   }
 
   * {
@@ -53,7 +36,7 @@ export const SNIPPER_STYLES = String.raw`
     user-select: none;
     touch-action: none;
     isolation: isolate;
-    animation: qr-app-enter 240ms var(--qr-emphasized-decelerate) both;
+    animation: qr-app-enter 240ms var(--qr-motion-decelerate) both;
   }
 
   .snapshot {
@@ -65,15 +48,15 @@ export const SNIPPER_STYLES = String.raw`
     pointer-events: none;
     filter: brightness(0.52) saturate(0.72);
     transform: scale(1);
-    animation: qr-snapshot-settle 500ms var(--qr-emphasized-decelerate) both;
+    animation: qr-snapshot-settle 500ms var(--qr-motion-decelerate) both;
   }
 
   .scrim {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at 50% 42%, rgba(70, 42, 82, .08), transparent 42%),
-      rgba(13, 10, 15, 0.3);
+      radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--qr-primary) 8%, transparent), transparent 42%),
+      var(--qr-scrim);
     pointer-events: none;
     animation: qr-scrim-in 320ms ease-out both;
   }
@@ -90,15 +73,13 @@ export const SNIPPER_STYLES = String.raw`
     color: var(--qr-on-surface);
     background: color-mix(in srgb, var(--qr-surface) 94%, transparent);
     border: 1px solid color-mix(in srgb, var(--qr-outline) 24%, transparent);
-    border-radius: 28px;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, white 42%, transparent) inset,
-      0 8px 30px var(--qr-shadow);
+    border-radius: var(--qr-shapes-pill);
+    box-shadow: var(--qr-elevation-floating);
     cursor: default;
     transform: translateX(-50%);
     backdrop-filter: blur(18px);
     transform-origin: 50% 0;
-    animation: qr-enter 420ms var(--qr-emphasized-decelerate) both;
+    animation: qr-enter 420ms var(--qr-motion-decelerate) both;
   }
 
   .brand-mark {
@@ -110,7 +91,7 @@ export const SNIPPER_STYLES = String.raw`
     background: var(--qr-primary-container);
     border-radius: 11px 16px 11px 16px;
     box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-primary) 24%, transparent);
-    animation: qr-mark-enter 560ms var(--qr-emphasized-decelerate) 80ms both;
+    animation: qr-mark-enter 560ms var(--qr-motion-decelerate) 80ms both;
   }
 
   .brand-mark svg,
@@ -140,7 +121,7 @@ export const SNIPPER_STYLES = String.raw`
   }
 
   .instruction.changed {
-    animation: qr-instruction-change 260ms var(--qr-emphasized-decelerate);
+    animation: qr-instruction-change 260ms var(--qr-motion-decelerate);
   }
 
   .icon-button {
@@ -155,9 +136,9 @@ export const SNIPPER_STYLES = String.raw`
     border-radius: 20px;
     cursor: pointer;
     transition:
-      color 180ms var(--qr-standard),
-      background-color 180ms var(--qr-standard),
-      transform 180ms var(--qr-emphasized);
+      color var(--qr-motion-fast) var(--qr-motion-standard),
+      background-color var(--qr-motion-fast) var(--qr-motion-standard),
+      transform var(--qr-motion-fast) var(--qr-motion-emphasized);
   }
 
 
@@ -174,7 +155,7 @@ export const SNIPPER_STYLES = String.raw`
   }
 
   .icon-button svg {
-    transition: transform 220ms var(--qr-emphasized);
+    transition: transform 220ms var(--qr-motion-emphasized);
   }
 
   .icon-button:focus-visible,
@@ -189,19 +170,16 @@ export const SNIPPER_STYLES = String.raw`
     overflow: visible;
     background-repeat: no-repeat;
     background-size: 100vw 100vh;
-    border: 3px solid #f1d7ff;
+    border: 3px solid var(--qr-selection);
     border-radius: 18px;
-    box-shadow:
-      0 0 0 1px rgba(48, 16, 66, .65),
-      0 12px 40px rgba(19, 7, 25, .38),
-      inset 0 0 0 1px rgba(255, 255, 255, .42);
+    box-shadow: var(--qr-elevation-selected);
     pointer-events: none;
     transform-origin: center;
   }
 
   .selection.visible {
     display: block;
-    animation: qr-selection 220ms var(--qr-emphasized-decelerate);
+    animation: qr-selection 220ms var(--qr-motion-decelerate);
   }
 
   .selection::after {
@@ -219,16 +197,16 @@ export const SNIPPER_STYLES = String.raw`
 
   .is-busy .selection::after {
     opacity: 1;
-    background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, .44) 48%, transparent 76%);
+    background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--qr-white) 44%, transparent) 48%, transparent 76%);
     background-size: 240% 100%;
     animation: qr-selection-scan 900ms ease-in-out infinite;
   }
 
   .is-busy .selection {
     box-shadow:
-      0 0 0 1px rgba(48, 16, 66, .65),
+      0 0 0 1px var(--qr-selection-outline),
       0 0 0 7px color-mix(in srgb, var(--qr-primary) 15%, transparent),
-      0 16px 50px rgba(19, 7, 25, .45);
+      0 16px 50px var(--qr-shadow);
   }
 
 
@@ -239,8 +217,8 @@ export const SNIPPER_STYLES = String.raw`
     background: var(--qr-primary-container);
     border: 3px solid var(--qr-primary);
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(24, 8, 31, .28);
-    animation: qr-corner-enter 300ms var(--qr-emphasized-decelerate) both;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--qr-shadow) 82%, transparent);
+    animation: qr-corner-enter var(--qr-motion-medium) var(--qr-motion-decelerate) both;
   }
 
   .corner.tl { top: -9px; left: -9px; border-radius: 9px 5px 5px 5px; }
@@ -261,7 +239,7 @@ export const SNIPPER_STYLES = String.raw`
     white-space: nowrap;
     transform: translateX(-50%);
     box-shadow: 0 5px 16px color-mix(in srgb, var(--qr-primary) 20%, transparent);
-    animation: qr-label-enter 260ms var(--qr-emphasized-decelerate) 60ms both;
+    animation: qr-label-enter 260ms var(--qr-motion-decelerate) 60ms both;
   }
 
   .result-card {
@@ -278,11 +256,8 @@ export const SNIPPER_STYLES = String.raw`
       radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--qr-primary-container) 32%, transparent), transparent 38%),
       var(--qr-surface);
     border: 1px solid color-mix(in srgb, var(--qr-outline) 22%, transparent);
-    border-radius: 32px 32px 32px 12px;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, white 48%, transparent) inset,
-      0 18px 60px rgba(20, 9, 27, .38),
-      0 4px 18px rgba(20, 9, 27, .2);
+    border-radius: var(--qr-shapes-card);
+    box-shadow: var(--qr-elevation-dialog);
     cursor: default;
     transform: translate(-50%, -50%);
     transform-origin: 50% 100%;
@@ -293,7 +268,7 @@ export const SNIPPER_STYLES = String.raw`
 
   .result-card.visible {
     display: block;
-    animation: qr-result 480ms var(--qr-emphasized-decelerate) both;
+    animation: qr-result var(--qr-motion-slow) var(--qr-motion-decelerate) both;
   }
 
   .result-card.warning {
@@ -301,7 +276,7 @@ export const SNIPPER_STYLES = String.raw`
       radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--qr-warning-container) 48%, transparent), transparent 40%),
       var(--qr-surface);
     border-color: color-mix(in srgb, var(--qr-warning) 35%, var(--qr-outline));
-    border-radius: 28px 44px 28px 16px;
+    border-radius: var(--qr-shapes-card-accent);
   }
 
   .result-heading {
@@ -315,7 +290,7 @@ export const SNIPPER_STYLES = String.raw`
   .result-card.visible .result-value:not([hidden]),
   .result-card.visible .security-review:not([hidden]),
   .result-card.visible .result-actions {
-    animation: qr-content-enter 380ms var(--qr-emphasized-decelerate) both;
+    animation: qr-content-enter 380ms var(--qr-motion-decelerate) both;
   }
 
   .result-card.visible .hostname-row:not([hidden]) { animation-delay: 55ms; }
@@ -332,8 +307,8 @@ export const SNIPPER_STYLES = String.raw`
     color: var(--qr-on-primary-container);
     background: var(--qr-primary-container);
     border-radius: 16px 24px 16px 24px;
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--qr-primary) 20%, transparent);
-    transition: border-radius 300ms var(--qr-emphasized), transform 300ms var(--qr-emphasized);
+    box-shadow: var(--qr-elevation-raised);
+    transition: border-radius var(--qr-motion-medium) var(--qr-motion-emphasized), transform var(--qr-motion-medium) var(--qr-motion-emphasized);
   }
 
   .status-icon.error {
@@ -345,7 +320,7 @@ export const SNIPPER_STYLES = String.raw`
 
   .result-title {
     margin: 1px 0 3px;
-    font-size: 24px;
+    font-size: var(--qr-typography-title-size);
     font-weight: 760;
     letter-spacing: -.02em;
     line-height: 1.15;
@@ -354,7 +329,7 @@ export const SNIPPER_STYLES = String.raw`
   .result-subtitle {
     margin: 0;
     color: var(--qr-on-surface-variant);
-    font-size: 14px;
+    font-size: var(--qr-typography-body-size);
     line-height: 1.4;
   }
 
@@ -366,14 +341,14 @@ export const SNIPPER_STYLES = String.raw`
     overflow: auto;
     color: var(--qr-on-surface);
     background: var(--qr-surface-container);
-    border-radius: 18px;
+    border-radius: var(--qr-shapes-medium);
     font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
     font-size: 13px;
     line-height: 1.55;
     overflow-wrap: anywhere;
     user-select: text;
     border: 1px solid color-mix(in srgb, var(--qr-outline) 12%, transparent);
-    box-shadow: 0 1px 0 color-mix(in srgb, white 35%, transparent) inset;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--qr-white) 35%, transparent) inset;
   }
 
   .result-value[hidden] { display: none; }
@@ -386,7 +361,7 @@ export const SNIPPER_STYLES = String.raw`
     color: var(--qr-on-surface);
     background: color-mix(in srgb, var(--qr-primary-container) 66%, var(--qr-surface));
     border: 1px solid color-mix(in srgb, var(--qr-primary) 24%, transparent);
-    border-radius: 18px;
+    border-radius: var(--qr-shapes-medium);
     overflow-wrap: anywhere;
   }
 
@@ -413,7 +388,7 @@ export const SNIPPER_STYLES = String.raw`
     background: var(--qr-surface-container);
     border: 1px solid color-mix(in srgb, var(--qr-outline) 14%, transparent);
     border-radius: 18px 18px 18px 7px;
-    box-shadow: 0 1px 0 color-mix(in srgb, white 32%, transparent) inset;
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--qr-white) 32%, transparent) inset;
   }
 
   .review-resolved-section {
@@ -534,11 +509,11 @@ export const SNIPPER_STYLES = String.raw`
     position: relative;
     overflow: hidden;
     transition:
-      color 180ms var(--qr-standard),
-      background-color 180ms var(--qr-standard),
-      box-shadow 220ms var(--qr-emphasized),
-      transform 180ms var(--qr-emphasized),
-      border-radius 220ms var(--qr-emphasized);
+      color var(--qr-motion-fast) var(--qr-motion-standard),
+      background-color var(--qr-motion-fast) var(--qr-motion-standard),
+      box-shadow 220ms var(--qr-motion-emphasized),
+      transform var(--qr-motion-fast) var(--qr-motion-emphasized),
+      border-radius 220ms var(--qr-motion-emphasized);
   }
 
   .action-button:hover {
@@ -590,7 +565,7 @@ export const SNIPPER_STYLES = String.raw`
 
   .toast.visible {
     display: block;
-    animation: qr-toast 300ms var(--qr-emphasized-decelerate);
+    animation: qr-toast var(--qr-motion-medium) var(--qr-motion-decelerate);
   }
 
   @keyframes qr-enter {
@@ -660,26 +635,6 @@ export const SNIPPER_STYLES = String.raw`
     100% { background-position: -80% 0; }
   }
 
-  @media (prefers-color-scheme: dark) {
-    :host {
-      --qr-primary: #dcb9f5;
-      --qr-on-primary: #422255;
-      --qr-primary-container: #593a6d;
-      --qr-on-primary-container: #f0dbff;
-      --qr-surface: #161217;
-      --qr-surface-container: #211d22;
-      --qr-surface-high: #2b272c;
-      --qr-on-surface: #e9e0e8;
-      --qr-on-surface-variant: #cfc3cf;
-      --qr-outline: #998d9a;
-      --qr-warning: #ffb95c;
-      --qr-on-warning: #452b00;
-      --qr-warning-container: #624000;
-      --qr-on-warning-container: #ffdea5;
-      --qr-shadow: rgba(0, 0, 0, .54);
-    }
-  }
-
   @media (prefers-contrast: more) {
     .top-bar,
     .result-card { border-width: 2px; border-color: var(--qr-outline); }
@@ -709,4 +664,4 @@ export const SNIPPER_STYLES = String.raw`
     .result-card { max-height: calc(100vh - 20px); padding: 18px; }
     .result-value { max-height: 108px; margin-block: 14px; }
   }
-`;
+`}`;

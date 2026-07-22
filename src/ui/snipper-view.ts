@@ -1,10 +1,11 @@
 import type { SelectionRect } from '../core/selection';
-import { ICONS } from './icons';
+import { createActionButton as createButtonPrimitive, createIconButton, createStatusIcon } from './components';
+import { createIcon, type IconName } from './icons';
 import { SNIPPER_STYLES } from './snipper-styles';
 
 export type ResultAction = Readonly<{
   label: string;
-  icon?: string;
+  icon?: IconName;
   filled?: boolean;
   onSelect: () => void;
 }>;
@@ -121,8 +122,7 @@ export class SnipperView {
     }
 
     const status = this.resultCard.querySelector('.status-icon')!;
-    status.innerHTML = presentation.isWarning ? ICONS.warning : ICONS.check;
-    status.classList.toggle('error', presentation.isWarning);
+    status.replaceWith(createStatusIcon(presentation.isWarning ? 'warning' : 'check', presentation.isWarning));
     this.resultCard.classList.toggle('warning', presentation.isWarning);
 
     const actions = this.resultCard.querySelector('.result-actions')!;
@@ -198,11 +198,11 @@ export class SnipperView {
         <img class="snapshot" alt="" draggable="false">
         <div class="scrim"></div>
         <header class="top-bar">
-          <span class="brand-mark">${ICONS.qr}</span>
+          <span class="brand-mark" data-icon="qr"></span>
           <span class="instruction" aria-live="polite">
             <strong>Preparing screen…</strong><span>QR Snip</span>
           </span>
-          <button class="icon-button" data-action="close" type="button" aria-label="Cancel snip">${ICONS.close}</button>
+          <span data-component="close"></span>
         </header>
         <div class="selection" role="region" aria-label="QR selection" aria-hidden="true">
           <span class="corner tl"></span><span class="corner tr"></span>
@@ -231,7 +231,7 @@ export class SnipperView {
             </section>
             <section class="risk-panel">
               <div class="risk-heading">
-                <span class="risk-symbol">${ICONS.warning}</span>
+                <span class="risk-symbol" data-icon="warning"></span>
                 <strong>Why this needs care</strong>
               </div>
               <ul class="risk-list"></ul>
@@ -242,17 +242,15 @@ export class SnipperView {
         </section>
         <div class="toast" role="status" aria-live="polite"></div>
       </main>`;
-    return template.content;
+    const fragment = template.content;
+    fragment.querySelector('[data-icon="qr"]')?.append(createIcon('qr'));
+    fragment.querySelector('[data-icon="warning"]')?.append(createIcon('warning'));
+    fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton('Cancel snip', 'close', 'close'));
+    return fragment;
   }
 
   private createActionButton(action: ResultAction): HTMLButtonElement {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `action-button${action.filled ? ' filled' : ''}`;
-    button.innerHTML = `${action.icon ?? ''}<span></span>`;
-    button.querySelector('span')!.textContent = action.label;
-    button.addEventListener('click', action.onSelect);
-    return button;
+    return createButtonPrimitive(action.label, action.filled ? 'filled' : 'text', action.onSelect, action.icon);
   }
 
   private showResultContent(presentation: ResultPresentation): void {

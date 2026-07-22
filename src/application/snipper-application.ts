@@ -3,7 +3,6 @@ import { classifyResult, displayPayload, type ClassifiedResult } from '../core/r
 import { toPixelCrop, type SelectionRect } from '../core/selection';
 import { assessLinkSecurity, type LinkSecurityAssessment } from '../security/link-security';
 import { toUnicode } from 'punycode';
-import { ICONS } from '../ui/icons';
 import { SelectionGesture } from '../ui/selection-gesture';
 import { SnipperView } from '../ui/snipper-view';
 
@@ -92,11 +91,11 @@ export class SnipperApplication {
       ...(linkSecurity ? { hostname: linkSecurity.hostname } : {}),
       isWarning: false,
       actions: [
-        { label: 'Scan another', icon: ICONS.refresh, onSelect: () => this.reset() },
-        { label: 'Copy', icon: ICONS.copy, onSelect: () => void this.copyValue(result.value) },
+        { label: 'Scan another', icon: 'refresh', onSelect: () => this.reset() },
+        { label: 'Copy', icon: 'copy', onSelect: () => void this.copyValue(result.value) },
         ...(result.openUrl ? [{
           label: this.openLabel(result),
-          icon: ICONS.open,
+          icon: 'open' as const,
           filled: true,
           onSelect: () => this.openResult(result.openUrl!),
         }] : []),
@@ -122,9 +121,9 @@ export class SnipperApplication {
       hostname: assessment.hostname,
       isWarning: true,
       actions: [
-        { label: 'Scan another', icon: ICONS.refresh, onSelect: () => this.reset() },
-        { label: 'Copy instead', icon: ICONS.copy, onSelect: () => void this.copyValue(result.value) },
-        { label: 'Open anyway', icon: ICONS.open, filled: true, onSelect: () => this.openResult(url) },
+        { label: 'Scan another', icon: 'refresh', onSelect: () => this.reset() },
+        { label: 'Copy instead', icon: 'copy', onSelect: () => void this.copyValue(result.value) },
+        { label: 'Open anyway', icon: 'open', filled: true, onSelect: () => this.openResult(url) },
       ],
     });
   }
@@ -141,7 +140,7 @@ export class SnipperApplication {
       isWarning: true,
       actions: [
         { label: 'Cancel', onSelect: () => this.destroy() },
-        { label: 'Try again', icon: ICONS.refresh, filled: true, onSelect: () => this.reset() },
+        { label: 'Try again', icon: 'refresh', filled: true, onSelect: () => this.reset() },
       ],
     });
   }
