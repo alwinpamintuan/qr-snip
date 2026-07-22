@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isOpenResultMessage, isStartCaptureMessage } from '../src/core/messages';
+import { isOpenResultMessage, isProbeContentMessage, isStartCaptureMessage } from '../src/core/messages';
 
 describe('runtime message guards', () => {
+  it('accepts only the internal content readiness probe', () => {
+    expect(isProbeContentMessage({ type: 'PROBE_CONTENT' })).toBe(true);
+    expect(isProbeContentMessage({ type: 'PROBE_CONTENT', ready: true })).toBe(true);
+    expect(isProbeContentMessage({ type: 'START_CAPTURE' })).toBe(false);
+  });
+
   it('requires an invocation ID and image data URL for capture messages', () => {
     expect(isStartCaptureMessage({
       type: 'START_CAPTURE',

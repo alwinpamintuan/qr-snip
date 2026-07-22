@@ -4,13 +4,22 @@ export type StartCaptureMessage = {
   screenshotUrl: string;
 };
 
+export type ProbeContentMessage = {
+  type: 'PROBE_CONTENT';
+};
+
 export type OpenResultMessage = {
   type: 'OPEN_RESULT';
   url: string;
 };
 
 export type BackgroundMessage = OpenResultMessage;
-export type ContentMessage = StartCaptureMessage;
+export type ContentMessage = ProbeContentMessage | StartCaptureMessage;
+
+export function isProbeContentMessage(value: unknown): value is ProbeContentMessage {
+  if (typeof value !== 'object' || value === null) return false;
+  return (value as Partial<ProbeContentMessage>).type === 'PROBE_CONTENT';
+}
 
 export function isStartCaptureMessage(value: unknown): value is StartCaptureMessage {
   if (typeof value !== 'object' || value === null) return false;

@@ -55,9 +55,15 @@ sequenceDiagram
 
     User->>Action: Click or shortcut
     Action->>BG: action.onClicked(tab)
-    BG->>API: captureVisibleTab(windowId)
-    API-->>BG: PNG data URL
-    BG->>API: scripting.executeScript(tabId)
+    par Capture visible pixels
+        BG->>API: captureVisibleTab(windowId)
+        API-->>BG: PNG data URL
+    and Prepare dormant listener
+        BG->>CS: PROBE_CONTENT
+        alt Listener is absent
+            BG->>API: scripting.executeScript(tabId)
+        end
+    end
     BG->>CS: START_CAPTURE(invocationId, PNG)
     CS-->>BG: Invocation acknowledgement
     User->>CS: Drag selection
@@ -76,7 +82,7 @@ sequenceDiagram
     end
 ```
 
-The screenshot is captured before the overlay is injected. This prevents QR Snip's own interface from appearing in the image and freezes animation, sticky elements, video frames, and page mutations for the duration of the selection workflow.
+Capture and dormant listener preparation overlap, but the content script performs no DOM mutation before `START_CAPTURE`. The screenshot therefore completes before the overlay mounts. This prevents QR Snip's own interface from appearing in the image and freezes animation, sticky elements, video frames, and page mutations for the duration of the selection workflow.
 
 ## 4. Component responsibilities
 
@@ -87,9 +93,9 @@ The screenshot is captured before the overlay is injected. This prevents QR Snip
 - handles toolbar and shortcut activation;
 - creates an invocation ID and suppresses stale overlapping invocations;
 - rejects known browser-owned and extension-store URLs;
-- captures the current visible tab under temporary `activeTab` access;
-- verifies that the tab has not navigated between capture and injection;
-- injects the runtime snipper bundle with `scripting`;
+- captures the current visible tab under temporary `activeTab` access while probing or preparing the dormant content listener;
+- verifies that the tab has not navigated during activation;
+- reuses an existing content listener or injects the runtime snipper bundle with `scripting`;
 - sends the screenshot and invocation ID to the content script;
 - validates requested external URLs a second time; and
 - shows a short, categorized toolbar-badge recovery message when activation fails.
@@ -100,7 +106,7 @@ It must never persist or log a URL, tab title, screenshot, decoded payload, or p
 
 `entrypoints/snipper.content.ts` uses `registration: 'runtime'`; it is not declared on every URL. The background injects it only after an explicit user action.
 
-A guarded global `SnipperApplication` instance prevents duplicate message listeners when the same bundle is injected again into a document. Incoming `START_CAPTURE` messages pass a runtime shape guard before changing application state.
+A guarded global `SnipperApplication` instance prevents duplicate message listeners when the same bundle is injected again into a document. The lightweight `PROBE_CONTENT` message lets the background skip repeat injection; incoming `START_CAPTURE` messages pass a runtime shape guard before changing application state. Neither path mounts UI until a validated capture message arrives.
 
 ### Application layer
 
@@ -120,9 +126,10 @@ Application cleanup aborts active decoding, terminates the worker, detaches poin
 ### Core and security modules
 
 - `src/core/messages.ts`: discriminated runtime-message contracts and defensive shape guards.
+- `src/core/decode-limits.ts`: decoder-independent dimension and pixel budgets used by the page-side crop adapter and worker pipeline.
 - `src/core/selection.ts`: normalized pointer rectangles, minimum selection size, clamping, and CSS-to-image coordinate mapping.
 - `src/core/decode.ts`: `QrDecoder` contract, image/canvas adapter, resource-constrained crop, transferable-buffer worker client, cancellation, and typed outcomes.
-- `src/core/decode-pipeline.ts`: canvas-independent RGBA validation, decode retry policy, scaling, and `jsQR` invocation.
+- `src/core/decode-pipeline.ts`: worker-only RGBA validation, decode retry policy, scaling, and `jsQR` invocation.
 - `src/core/result.ts`: payload normalization, size limits, URL/email/phone/text classification, display truncation, and protocol allow list.
 - `src/security/link-security.ts`: deterministic, side-effect-free HTTP(S) warning assessment and hostname presentation.
 

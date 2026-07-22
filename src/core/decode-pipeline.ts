@@ -1,4 +1,5 @@
 import jsQR from 'jsqr';
+import { MAX_DECODE_PIXELS } from './decode-limits';
 
 export type RgbaImage = Readonly<{
   data: Uint8ClampedArray;
@@ -6,8 +7,6 @@ export type RgbaImage = Readonly<{
   height: number;
 }>;
 
-export const MAX_DECODE_PIXELS = 4_000_000;
-export const MAX_DECODE_DIMENSION = 4_096;
 const RETRY_DECODE_PIXELS = 2_000_000;
 
 export function decodeRgba(image: RgbaImage): string | null {
@@ -23,19 +22,6 @@ export function decodeRgba(image: RgbaImage): string | null {
   if (Math.min(image.width, image.height) >= 320) return null;
   const enlarged = scaleNearest(image, 2);
   return runDecoder(enlarged);
-}
-
-export function constrainedDimensions(width: number, height: number): Readonly<{ width: number; height: number }> {
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
-    throw new RangeError('Image dimensions must be positive.');
-  }
-  const dimensionScale = Math.min(1, MAX_DECODE_DIMENSION / Math.max(width, height));
-  const pixelScale = Math.min(1, Math.sqrt(MAX_DECODE_PIXELS / (width * height)));
-  const scale = Math.min(dimensionScale, pixelScale);
-  return {
-    width: Math.max(1, Math.floor(width * scale)),
-    height: Math.max(1, Math.floor(height * scale)),
-  };
 }
 
 function assertImage(image: RgbaImage): void {

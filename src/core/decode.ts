@@ -1,5 +1,5 @@
 import type { PixelCrop } from './selection';
-import { constrainedDimensions } from './decode-pipeline';
+import { constrainedDimensions } from './decode-limits';
 import DecoderWorker from '../workers/qr-decoder.worker.ts?worker&inline';
 
 export type DecodeOutcome =

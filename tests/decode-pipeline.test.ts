@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { constrainedDimensions, decodeRgba, MAX_DECODE_PIXELS } from '../src/core/decode-pipeline';
+import { constrainedDimensions, MAX_DECODE_PIXELS } from '../src/core/decode-limits';
+import { decodeRgba } from '../src/core/decode-pipeline';
 
 describe('RGBA decode pipeline', () => {
   it('rejects malformed buffers before invoking the decoder', () => {

@@ -15,6 +15,8 @@ export type SelectionGestureCallbacks = Readonly<{
 export class SelectionGesture {
   private dragStart: Point | null = null;
   private activePointerId: number | null = null;
+  private pendingSelection: SelectionRect | null = null;
+  private changeFrame: number | null = null;
 
   constructor(
     private readonly surface: HTMLElement,
@@ -37,8 +39,11 @@ export class SelectionGesture {
   }
 
   cancel(): void {
+    if (this.changeFrame !== null) cancelAnimationFrame(this.changeFrame);
     this.dragStart = null;
     this.activePointerId = null;
+    this.pendingSelection = null;
+    this.changeFrame = null;
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
@@ -53,13 +58,20 @@ export class SelectionGesture {
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     if (this.dragStart === null || this.activePointerId !== event.pointerId) return;
-    this.callbacks.onChange(rectFromPoints(this.dragStart, this.pointFromEvent(event)));
+    this.pendingSelection = rectFromPoints(this.dragStart, this.pointFromEvent(event));
+    this.changeFrame ??= requestAnimationFrame(() => {
+      const selection = this.pendingSelection;
+      this.pendingSelection = null;
+      this.changeFrame = null;
+      if (selection) this.callbacks.onChange(selection);
+    });
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
     if (this.dragStart === null || this.activePointerId !== event.pointerId) return;
     const selection = rectFromPoints(this.dragStart, this.pointFromEvent(event));
     this.cancel();
+    this.callbacks.onChange(selection);
     if (this.surface.hasPointerCapture(event.pointerId)) this.surface.releasePointerCapture(event.pointerId);
 
     if (isUsableSelection(selection)) this.callbacks.onComplete(selection);
@@ -75,4 +87,3 @@ export class SelectionGesture {
     return clampPoint({ x: event.clientX, y: event.clientY }, window.innerWidth, window.innerHeight);
   }
 }
-

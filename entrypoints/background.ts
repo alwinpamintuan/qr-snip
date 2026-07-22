@@ -53,11 +53,16 @@ async function beginSnip(
     return;
   }
 
-  let screenshotUrl: string;
-  try {
-    screenshotUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
-  } catch (error) {
-    await showActionError(tabId, categorizeApiError(error, 'capture-failed'), t);
+  const [captureResult, contentResult] = await Promise.allSettled([
+    browser.tabs.captureVisibleTab(tab.windowId, { format: 'png' }),
+    ensureContentScript(tabId),
+  ]);
+  if (captureResult.status === 'rejected') {
+    await showActionError(tabId, categorizeApiError(captureResult.reason, 'capture-failed'), t);
+    return;
+  }
+  if (contentResult.status === 'rejected') {
+    await showActionError(tabId, categorizeApiError(contentResult.reason, 'injection-failed'), t);
     return;
   }
   if (activeInvocations.get(tabId) !== invocationId) return;
@@ -67,22 +72,28 @@ async function beginSnip(
   }
 
   try {
-    await browser.scripting.executeScript({
-      target: { tabId },
-      files: ['/content-scripts/snipper.js'],
+    const response = await browser.tabs.sendMessage(tabId, {
+      type: 'START_CAPTURE',
+      invocationId,
+      screenshotUrl: captureResult.value,
     });
-  } catch (error) {
-    await showActionError(tabId, categorizeApiError(error, 'injection-failed'), t);
-    return;
-  }
-  if (activeInvocations.get(tabId) !== invocationId) return;
-
-  try {
-    const response = await browser.tabs.sendMessage(tabId, { type: 'START_CAPTURE', invocationId, screenshotUrl });
     if (response?.invocationId !== invocationId) await showActionError(tabId, 'navigation-race', t);
   } catch (error) {
     await showActionError(tabId, categorizeApiError(error, 'navigation-race'), t);
   }
+}
+
+async function ensureContentScript(tabId: number): Promise<void> {
+  try {
+    const response = await browser.tabs.sendMessage(tabId, { type: 'PROBE_CONTENT' });
+    if (response?.ready === true) return;
+  } catch {
+    // A missing receiver is expected on the first activation.
+  }
+  await browser.scripting.executeScript({
+    target: { tabId },
+    files: ['/content-scripts/snipper.js'],
+  });
 }
 
 async function tabIsCurrent(tabId: number, initialUrl: string | undefined): Promise<boolean> {
