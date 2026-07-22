@@ -85,6 +85,8 @@ test('onboarding explains the privacy model and options persist locally', async 
   const metrics = await options.evaluate(() => ({
     helperFontSizes: [...document.querySelectorAll('.field small, .privacy-note span')]
       .map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+    regularFontSizes: [...document.querySelectorAll('.field strong, select, button, .privacy-note strong, .status')]
+      .map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
     rowPadding: [...document.querySelectorAll('.field')]
       .map((element) => `${getComputedStyle(element).paddingBlockStart} ${getComputedStyle(element).paddingBlockEnd}`),
     controlHeights: [...document.querySelectorAll('select, button')]
@@ -96,6 +98,7 @@ test('onboarding explains the privacy model and options persist locally', async 
     })(),
   }));
   expect(metrics.helperFontSizes.every((size) => size === 12)).toBe(true);
+  expect(metrics.regularFontSizes.every((size) => size === 14)).toBe(true);
   expect(new Set(metrics.rowPadding)).toEqual(new Set(['12px 12px']));
   expect(metrics.controlHeights.every((height) => height <= 40)).toBe(true);
   expect(metrics.switchSize).toEqual({ width: 44, height: 28 });
