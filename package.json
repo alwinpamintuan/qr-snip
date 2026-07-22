@@ -20,13 +20,14 @@
     "build:firefox": "wxt build -b firefox --mv3",
     "build:all": "pnpm build && pnpm build:firefox",
     "permissions:check": "node scripts/assert-manifest.mjs",
+    "locales:check": "node scripts/assert-locales.mjs",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox --mv3",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "fixtures:generate": "node scripts/generate-qr-fixtures.mjs",
-    "check": "pnpm typecheck && pnpm test && pnpm build:all && pnpm permissions:check",
+    "check": "pnpm typecheck && pnpm test && pnpm locales:check && pnpm build:all && pnpm permissions:check",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

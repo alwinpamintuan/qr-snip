@@ -1,5 +1,6 @@
 import { SnipperApplication } from '../src/application/snipper-application';
 import { isStartCaptureMessage } from '../src/core/messages';
+import { createI18n } from '../src/i18n/messages';
 import { SnipperView } from '../src/ui/snipper-view';
 
 type ContentScriptGlobal = typeof globalThis & {
@@ -12,7 +13,8 @@ export default defineContentScript({
     const contentGlobal = globalThis as ContentScriptGlobal;
     if (contentGlobal.__qrSnipApplication) return;
 
-    contentGlobal.__qrSnipApplication = new SnipperApplication(new SnipperView());
+    const i18n = createI18n(browser.i18n);
+    contentGlobal.__qrSnipApplication = new SnipperApplication(new SnipperView(i18n), i18n.t);
     browser.runtime.onMessage.addListener((message: unknown) => {
       if (!isStartCaptureMessage(message)) return undefined;
       contentGlobal.__qrSnipApplication?.start(message.invocationId, message.screenshotUrl);

@@ -1,4 +1,5 @@
 import type { SelectionRect } from '../core/selection';
+import type { I18n } from '../i18n/messages';
 import { createActionButton as createButtonPrimitive, createIconButton, createStatusIcon } from './components';
 import { createIcon, type IconName } from './icons';
 import { SNIPPER_STYLES } from './snipper-styles';
@@ -42,6 +43,8 @@ export class SnipperView {
   private toast: HTMLElement | null = null;
   private screenshotUrl = '';
   private toastTimer: number | null = null;
+
+  constructor(private readonly i18n: I18n) {}
 
   get selectionSurface(): HTMLElement {
     const surface = this.root?.querySelector<HTMLElement>('.qr-snip-app');
@@ -194,17 +197,17 @@ export class SnipperView {
   private createLayout(): DocumentFragment {
     const template = document.createElement('template');
     template.innerHTML = `
-      <main class="qr-snip-app" role="application" aria-label="QR code snipping tool">
+      <main class="qr-snip-app" role="application">
         <img class="snapshot" alt="" draggable="false">
         <div class="scrim"></div>
         <header class="top-bar">
           <span class="brand-mark" data-icon="qr"></span>
           <span class="instruction" aria-live="polite">
-            <strong>Preparing screen…</strong><span>QR Snip</span>
+            <strong></strong><span></span>
           </span>
           <span data-component="close"></span>
         </header>
-        <div class="selection" role="region" aria-label="QR selection" aria-hidden="true">
+        <div class="selection" role="region" aria-hidden="true">
           <span class="corner tl"></span><span class="corner tr"></span>
           <span class="corner bl"></span><span class="corner br"></span>
           <span class="selection-label"></span>
@@ -215,24 +218,24 @@ export class SnipperView {
             <div><h1 class="result-title" id="qr-result-title"></h1><p class="result-subtitle"></p></div>
           </div>
           <div class="hostname-row" hidden>
-            <span class="hostname-label">Destination</span>
+            <span class="hostname-label"></span>
             <strong class="hostname-unicode"></strong>
             <code class="hostname-ascii"></code>
           </div>
           <div class="result-value" tabindex="0"></div>
           <div class="security-review" tabindex="0" hidden>
             <section class="review-section">
-              <span class="review-label">Scanned value</span>
+              <span class="review-label"></span>
               <code class="review-scanned-value"></code>
             </section>
             <section class="review-section review-resolved-section" hidden>
-              <span class="review-label">Resolved destination</span>
+              <span class="review-label"></span>
               <code class="review-resolved-value"></code>
             </section>
             <section class="risk-panel">
               <div class="risk-heading">
                 <span class="risk-symbol" data-icon="warning"></span>
-                <strong>Why this needs care</strong>
+                <strong></strong>
               </div>
               <ul class="risk-list"></ul>
             </section>
@@ -243,9 +246,21 @@ export class SnipperView {
         <div class="toast" role="status" aria-live="polite"></div>
       </main>`;
     const fragment = template.content;
+    const t = this.i18n.t;
+    const app = fragment.querySelector<HTMLElement>('.qr-snip-app')!;
+    app.dir = this.i18n.direction;
+    app.setAttribute('aria-label', t('applicationLabel'));
+    fragment.querySelector<HTMLElement>('.instruction strong')!.textContent = t('preparingTitle');
+    fragment.querySelector<HTMLElement>('.instruction span')!.textContent = t('extensionName');
+    fragment.querySelector<HTMLElement>('.selection')!.setAttribute('aria-label', t('selectionLabel'));
+    fragment.querySelector<HTMLElement>('.hostname-label')!.textContent = t('destinationLabel');
+    const reviewLabels = fragment.querySelectorAll<HTMLElement>('.review-label');
+    reviewLabels[0]!.textContent = t('scannedValueLabel');
+    reviewLabels[1]!.textContent = t('resolvedDestinationLabel');
+    fragment.querySelector<HTMLElement>('.risk-heading strong')!.textContent = t('riskHeading');
     fragment.querySelector('[data-icon="qr"]')?.append(createIcon('qr'));
     fragment.querySelector('[data-icon="warning"]')?.append(createIcon('warning'));
-    fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton('Cancel snip', 'close', 'close'));
+    fragment.querySelector('[data-component="close"]')?.replaceWith(createIconButton(t('cancelSnipLabel'), 'close', 'close'));
     return fragment;
   }
 

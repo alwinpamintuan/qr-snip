@@ -4,7 +4,6 @@ export type ClassifiedResult = Readonly<{
   value: string;
   kind: ResultKind;
   openUrl?: string;
-  label: string;
 }>;
 
 export const MAX_DISPLAY_PAYLOAD_LENGTH = 16_384;
@@ -19,13 +18,13 @@ const PHONE_PATTERN = /^\+?[\d\s().-]{7,}$/;
 export function classifyResult(rawValue: string): ClassifiedResult {
   const value = normalizePayload(rawValue);
   if (value.length > MAX_PAYLOAD_LENGTH || CONTROL_CHARACTER_PATTERN.test(value)) {
-    return { value, kind: 'text', label: 'Text' };
+    return { value, kind: 'text' };
   }
 
   try {
     const url = new URL(value);
     if (url.protocol === 'http:' || url.protocol === 'https:') {
-      return { value, kind: 'url', openUrl: url.href, label: 'Web link' };
+      return { value, kind: 'url', openUrl: url.href };
     }
   } catch {
     // Continue through non-URL result types.
@@ -34,23 +33,23 @@ export function classifyResult(rawValue: string): ClassifiedResult {
   if (value.toLowerCase().startsWith('mailto:')) {
     const address = value.slice('mailto:'.length).split('?')[0] ?? '';
     if (EMAIL_PATTERN.test(address)) {
-      return { value, kind: 'email', openUrl: value, label: 'Email address' };
+      return { value, kind: 'email', openUrl: value };
     }
   }
 
   if (EMAIL_PATTERN.test(value)) {
-    return { value, kind: 'email', openUrl: `mailto:${value}`, label: 'Email address' };
+    return { value, kind: 'email', openUrl: `mailto:${value}` };
   }
 
   if (value.toLowerCase().startsWith('tel:') && PHONE_PATTERN.test(value.slice(4))) {
-    return { value, kind: 'phone', openUrl: value, label: 'Phone number' };
+    return { value, kind: 'phone', openUrl: value };
   }
 
   if (PHONE_PATTERN.test(value)) {
-    return { value, kind: 'phone', openUrl: `tel:${value.replace(/\s/g, '')}`, label: 'Phone number' };
+    return { value, kind: 'phone', openUrl: `tel:${value.replace(/\s/g, '')}` };
   }
 
-  return { value, kind: 'text', label: 'Text' };
+  return { value, kind: 'text' };
 }
 
 export function isAllowedOpenUrl(value: string): boolean {
@@ -71,7 +70,7 @@ export function normalizePayload(value: string): string {
 export function displayPayload(value: string): Readonly<{ text: string; truncated: boolean }> {
   if (value.length <= MAX_DISPLAY_PAYLOAD_LENGTH) return { text: value, truncated: false };
   return {
-    text: `${value.slice(0, MAX_DISPLAY_PAYLOAD_LENGTH)}\n\n… Display limited for safety. Copy preserves the complete value.`,
+    text: value.slice(0, MAX_DISPLAY_PAYLOAD_LENGTH),
     truncated: true,
   };
 }

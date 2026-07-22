@@ -1,5 +1,6 @@
 import { isAllowedOpenUrl } from '../src/core/result';
 import { isOpenResultMessage } from '../src/core/messages';
+import { createI18n, type MessageKey, type Translator } from '../src/i18n/messages';
 
 type ActivationFailure =
   | 'restricted-page'
@@ -10,21 +11,22 @@ type ActivationFailure =
   | 'tab-closed'
   | 'extension-invalidated';
 
-const FAILURE_TITLES: Record<ActivationFailure, string> = {
-  'restricted-page': 'This browser-owned page cannot be scanned. Open the QR code in a regular tab and try again.',
-  'permission-expired': 'Page access expired. Click QR Snip again to retry.',
-  'capture-failed': 'The visible screen could not be captured. Reload the page and try again.',
-  'injection-failed': 'QR Snip could not start on this page. Reload it or open the content in a regular tab.',
-  'navigation-race': 'The page changed while QR Snip was starting. Try again on the current page.',
-  'tab-closed': 'The tab closed before QR Snip could start.',
-  'extension-invalidated': 'QR Snip was updated. Reload the page and try again.',
+const FAILURE_MESSAGE_KEYS: Record<ActivationFailure, MessageKey> = {
+  'restricted-page': 'failureRestrictedPage',
+  'permission-expired': 'failurePermissionExpired',
+  'capture-failed': 'failureCaptureFailed',
+  'injection-failed': 'failureInjectionFailed',
+  'navigation-race': 'failureNavigationRace',
+  'tab-closed': 'failureTabClosed',
+  'extension-invalidated': 'failureExtensionInvalidated',
 };
 
 export default defineBackground(() => {
   const activeInvocations = new Map<number, string>();
+  const t = createI18n(browser.i18n).t;
 
   browser.action.onClicked.addListener((tab) => {
-    void beginSnip(tab, activeInvocations);
+    void beginSnip(tab, activeInvocations, t);
   });
 
   browser.runtime.onMessage.addListener((message: unknown) => {
@@ -33,9 +35,13 @@ export default defineBackground(() => {
   });
 });
 
-async function beginSnip(tab: Browser.tabs.Tab, activeInvocations: Map<number, string>): Promise<void> {
+async function beginSnip(
+  tab: Browser.tabs.Tab,
+  activeInvocations: Map<number, string>,
+  t: Translator,
+): Promise<void> {
   if (tab.id === undefined || tab.windowId === undefined) {
-    await showActionError(tab.id, 'tab-closed');
+    await showActionError(tab.id, 'tab-closed', t);
     return;
   }
   const tabId = tab.id;
@@ -43,7 +49,7 @@ async function beginSnip(tab: Browser.tabs.Tab, activeInvocations: Map<number, s
   activeInvocations.set(tabId, invocationId);
 
   if (isRestrictedUrl(tab.url)) {
-    await showActionError(tabId, 'restricted-page');
+    await showActionError(tabId, 'restricted-page', t);
     return;
   }
 
@@ -51,12 +57,12 @@ async function beginSnip(tab: Browser.tabs.Tab, activeInvocations: Map<number, s
   try {
     screenshotUrl = await browser.tabs.captureVisibleTab(tab.windowId, { format: 'png' });
   } catch (error) {
-    await showActionError(tabId, categorizeApiError(error, 'capture-failed'));
+    await showActionError(tabId, categorizeApiError(error, 'capture-failed'), t);
     return;
   }
   if (activeInvocations.get(tabId) !== invocationId) return;
   if (!await tabIsCurrent(tabId, tab.url)) {
-    await showActionError(tabId, 'navigation-race');
+    await showActionError(tabId, 'navigation-race', t);
     return;
   }
 
@@ -66,16 +72,16 @@ async function beginSnip(tab: Browser.tabs.Tab, activeInvocations: Map<number, s
       files: ['/content-scripts/snipper.js'],
     });
   } catch (error) {
-    await showActionError(tabId, categorizeApiError(error, 'injection-failed'));
+    await showActionError(tabId, categorizeApiError(error, 'injection-failed'), t);
     return;
   }
   if (activeInvocations.get(tabId) !== invocationId) return;
 
   try {
     const response = await browser.tabs.sendMessage(tabId, { type: 'START_CAPTURE', invocationId, screenshotUrl });
-    if (response?.invocationId !== invocationId) await showActionError(tabId, 'navigation-race');
+    if (response?.invocationId !== invocationId) await showActionError(tabId, 'navigation-race', t);
   } catch (error) {
-    await showActionError(tabId, categorizeApiError(error, 'navigation-race'));
+    await showActionError(tabId, categorizeApiError(error, 'navigation-race'), t);
   }
 }
 
@@ -103,9 +109,9 @@ function categorizeApiError(error: unknown, fallback: ActivationFailure): Activa
   return fallback;
 }
 
-async function showActionError(tabId: number | undefined, failure: ActivationFailure): Promise<void> {
+async function showActionError(tabId: number | undefined, failure: ActivationFailure, t: Translator): Promise<void> {
   if (tabId === undefined) return;
-  const title = FAILURE_TITLES[failure];
+  const title = t(FAILURE_MESSAGE_KEYS[failure]);
   try {
     await Promise.all([
       browser.action.setBadgeBackgroundColor({ tabId, color: '#BA1A1A' }),
@@ -114,7 +120,7 @@ async function showActionError(tabId: number | undefined, failure: ActivationFai
     ]);
     setTimeout(() => {
       void browser.action.setBadgeText({ tabId, text: '' });
-      void browser.action.setTitle({ tabId, title: 'Scan a QR code' });
+      void browser.action.setTitle({ tabId, title: t('actionTitle') });
     }, 5000);
   } catch {
     // The recovery hint cannot be displayed after the tab or extension context disappears.

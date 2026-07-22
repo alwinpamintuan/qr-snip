@@ -1,6 +1,6 @@
 export type LinkRisk = Readonly<{
   code: 'unencrypted' | 'credentials' | 'internationalized-domain' | 'ip-address' | 'local-network' | 'unusual-port';
-  message: string;
+  detail?: string;
 }>;
 
 export type LinkSecurityAssessment = Readonly<{
@@ -25,30 +25,29 @@ export function assessLinkSecurity(value: string, toUnicode: (hostname: string) 
   const risks: LinkRisk[] = [];
 
   if (url.protocol === 'http:') {
-    risks.push({ code: 'unencrypted', message: 'This link uses unencrypted HTTP.' });
+    risks.push({ code: 'unencrypted' });
   }
 
   if (url.username || url.password) {
-    risks.push({ code: 'credentials', message: 'The link contains embedded sign-in information.' });
+    risks.push({ code: 'credentials' });
   }
 
   if (url.hostname.toLowerCase().includes('xn--')) {
     risks.push({
       code: 'internationalized-domain',
-      message: 'The domain uses an encoded internationalized name that may imitate another site.',
     });
   }
 
   if (isIpAddress(url.hostname)) {
-    risks.push({ code: 'ip-address', message: 'The destination uses an IP address instead of a domain name.' });
+    risks.push({ code: 'ip-address' });
   }
 
   if (isLocalNetworkHost(url.hostname)) {
-    risks.push({ code: 'local-network', message: 'The link points to this device or a private network.' });
+    risks.push({ code: 'local-network' });
   }
 
   if (usesUnusualPort(url)) {
-    risks.push({ code: 'unusual-port', message: `The link uses the unusual port ${url.port}.` });
+    risks.push({ code: 'unusual-port', detail: url.port });
   }
 
   return {
