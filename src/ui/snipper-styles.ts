@@ -105,7 +105,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     cursor: default;
     transform: translateX(-50%);
     transform-origin: 50% 0;
-    animation: qr-enter 180ms var(--qr-motion-decelerate) both;
   }
 
   .brand-mark {
@@ -117,7 +116,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     background: var(--qr-primary-container);
     border-radius: 11px 16px 11px 16px;
     box-shadow: 0 4px 12px color-mix(in srgb, var(--qr-primary) 24%, transparent);
-    animation: qr-mark-enter 220ms var(--qr-motion-decelerate) both;
   }
 
   .brand-mark svg,
@@ -144,10 +142,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   .instruction span {
     color: var(--qr-on-surface-variant);
     font-size: 12px;
-  }
-
-  .instruction.changed {
-    animation: qr-instruction-change 260ms var(--qr-motion-decelerate);
   }
 
   .icon-button {
@@ -204,11 +198,9 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     transform-origin: center;
   }
 
-  .selection.visible {
-    display: block;
-    animation: qr-selection 220ms var(--qr-motion-decelerate);
-  }
+  .selection.visible { display: block; }
 
+  .selection::before,
   .selection::after {
     position: absolute;
     inset: -3px;
@@ -218,15 +210,26 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     pointer-events: none;
   }
 
+  .selection::before {
+    inset: -8px;
+    border: 2px solid color-mix(in srgb, var(--qr-primary) 38%, transparent);
+    border-radius: calc(18px + 5px);
+  }
+
   .is-busy {
     cursor: progress;
   }
 
   .is-busy .selection::after {
     opacity: 1;
-    background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--qr-white) 44%, transparent) 48%, transparent 76%);
-    background-size: 240% 100%;
-    animation: qr-selection-scan 900ms ease-in-out infinite;
+    background: linear-gradient(110deg, transparent 38%, color-mix(in srgb, var(--qr-white) 20%, transparent) 49%, transparent 60%);
+    background-size: 300% 100%;
+    animation: qr-selection-scan 1100ms ease-in-out infinite;
+  }
+
+  .is-busy .selection::before {
+    opacity: .65;
+    animation: qr-selection-pulse 900ms ease-in-out infinite alternate;
   }
 
   .is-busy .selection {
@@ -293,10 +296,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     scrollbar-color: color-mix(in srgb, var(--qr-primary) 38%, transparent) transparent;
   }
 
-  .result-card.visible {
-    display: block;
-    animation: qr-result var(--qr-motion-slow) var(--qr-motion-decelerate) both;
-  }
+  .result-card.visible { display: block; }
 
   .result-card.warning {
     background:
@@ -311,21 +311,6 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     align-items: flex-start;
     gap: 14px;
   }
-
-  .result-card.visible .result-heading,
-  .result-card.visible .hostname-row:not([hidden]),
-  .result-card.visible .result-summary:not([hidden]),
-  .result-card.visible .result-value:not([hidden]),
-  .result-card.visible .security-review:not([hidden]),
-  .result-card.visible .result-actions {
-    animation: qr-content-enter 380ms var(--qr-motion-decelerate) both;
-  }
-
-  .result-card.visible .hostname-row:not([hidden]) { animation-delay: 55ms; }
-  .result-card.visible .result-summary:not([hidden]),
-  .result-card.visible .result-value:not([hidden]),
-  .result-card.visible .security-review:not([hidden]) { animation-delay: 95ms; }
-  .result-card.visible .result-actions { animation-delay: 145ms; }
 
   .status-icon {
     display: grid;
@@ -644,10 +629,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
     transform: translateX(-50%);
   }
 
-  .toast.visible {
-    display: block;
-    animation: qr-toast var(--qr-motion-medium) var(--qr-motion-decelerate);
-  }
+  .toast.visible { display: block; }
 
   @keyframes qr-enter {
     0% { opacity: 0; transform: translate(-50%, -20px) scale(.88, .82); border-radius: 38px; }
@@ -706,6 +688,11 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   @keyframes qr-selection-scan {
     0% { background-position: 160% 0; }
     100% { background-position: -80% 0; }
+  }
+
+  @keyframes qr-selection-pulse {
+    from { transform: scale(.99); opacity: .38; }
+    to { transform: scale(1.015); opacity: .72; }
   }
 
   @media (prefers-contrast: more) {

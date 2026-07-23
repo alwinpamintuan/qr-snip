@@ -43,7 +43,7 @@ const browserMock = {
 
 class DeterministicDecoder implements QrDecoder {
   async decode(_screenshotUrl: string, _crop: unknown, signal: AbortSignal): Promise<DecodeOutcome> {
-    await new Promise((resolve) => window.setTimeout(resolve, 30));
+    await new Promise((resolve) => window.setTimeout(resolve, query.get('scenario') === 'slow' ? 350 : 30));
     if (signal.aborted) return { ok: false, reason: 'cancelled' };
     const scenario = query.get('scenario') ?? 'happy';
     if (scenario === 'not-found') return { ok: false, reason: 'not-found' };

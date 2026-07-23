@@ -26,6 +26,47 @@ test('@critical decodes, previews, copies, and opens only after an explicit acti
   await expect(page).toHaveURL(/\/harness\/$/);
 });
 
+test('pointer geometry stays direct while scan progress and result motion remain coordinated', async ({ page }) => {
+  await page.goto('/harness/?scenario=slow');
+  await page.mouse.move(90, 180);
+  await page.mouse.down();
+  await page.mouse.move(330, 420);
+  const selection = page.locator('.selection');
+  await expect(selection).toHaveCSS('width', '240px');
+  await expect(selection).toHaveCSS('height', '240px');
+  await page.mouse.up();
+
+  await expect(page.locator('.qr-snip-app')).toHaveClass(/is-busy/);
+  expect(await selection.evaluate((element) =>
+    getComputedStyle(element, '::after').animationName)).toBe('qr-selection-scan');
+  await expect(page.getByRole('heading', { name: 'QR code found' })).toBeVisible();
+  await expect(selection).toHaveAttribute('aria-hidden', 'true');
+});
+
+test('reduced motion preserves final states without repeating scan effects', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/harness/?scenario=slow');
+  await completeKeyboardSelection(page);
+
+  const selection = page.locator('.selection');
+  await expect(page.locator('.qr-snip-app')).toHaveClass(/is-busy/);
+  const ambient = await selection.evaluate((element) => {
+    const highlight = getComputedStyle(element, '::after');
+    const pulse = getComputedStyle(element, '::before');
+    return {
+      highlightIterations: highlight.animationIterationCount,
+      highlightDuration: highlight.animationDuration,
+      pulseIterations: pulse.animationIterationCount,
+    };
+  });
+  expect(ambient.highlightIterations).toBe('1');
+  expect(ambient.pulseIterations).toBe('1');
+  expect(Number.parseFloat(ambient.highlightDuration)).toBeLessThanOrEqual(.001);
+
+  await expect(page.getByRole('heading', { name: 'QR code found' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy' })).toBeFocused();
+});
+
 test('@critical suspicious links expose every signal before Open anyway', async ({ page }) => {
   await page.goto('/harness/?scenario=suspicious');
   await completeKeyboardSelection(page);

@@ -18,6 +18,10 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 40px;
+  --motion-fast: 180ms;
+  --motion-medium: 300ms;
+  --motion-standard: cubic-bezier(.2, 0, 0, 1);
+  --motion-spring: cubic-bezier(.34, 1.56, .64, 1);
   background: var(--surface);
   color: var(--on-surface);
 }
@@ -61,19 +65,30 @@ select, button { min-height: 40px; border: 1px solid var(--outline); border-radi
 select:focus-visible, button:focus-visible, input:focus-visible + i { outline: 3px solid color-mix(in srgb, var(--primary) 52%, transparent); outline-offset: 2px; }
 .toggle-field { position: relative; }
 .toggle-field input { position: absolute; opacity: 0; }
-.toggle-field i { flex: 0 0 auto; width: 44px; height: 28px; padding: 3px; border: 2px solid var(--outline); border-radius: 14px; transition: 180ms ease; }
-.toggle-field i::after { content: ''; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--outline); transition: inherit; }
+.toggle-field i { flex: 0 0 auto; width: 44px; height: 28px; padding: 3px; border: 2px solid var(--outline); border-radius: 14px; transition: background-color var(--motion-fast) var(--motion-standard), border-color var(--motion-fast) var(--motion-standard); }
+.toggle-field i::after { content: ''; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--outline); transition: transform var(--motion-medium) var(--motion-spring), background-color var(--motion-fast) var(--motion-standard); }
 .toggle-field input:checked + i { border-color: var(--primary); background: var(--primary); }
 .toggle-field input:checked + i::after { transform: translateX(16px); background: var(--on-primary); }
 [dir="rtl"] .toggle-field input:checked + i::after { transform: translateX(-16px); }
+.toggle-field:active i::after { transform: scale(.86); }
+.toggle-field:active input:checked + i::after { transform: translateX(16px) scale(.86); }
+[dir="rtl"] .toggle-field:active input:checked + i::after { transform: translateX(-16px) scale(.86); }
 .privacy-note { display: grid; gap: var(--space-1); margin: var(--space-4) 0; padding: var(--space-4); border-radius: var(--space-4) var(--space-4) var(--space-4) var(--space-1); background: var(--primary-container); color: var(--on-primary-container); }
 .privacy-note span { font-size: 12px; line-height: 1.5; }
-.reset-button { cursor: pointer; }
+.reset-button { cursor: pointer; transition: color var(--motion-fast) var(--motion-standard), background-color var(--motion-fast) var(--motion-standard), transform var(--motion-fast) var(--motion-standard); }
 .reset-button:hover { background: color-mix(in srgb, var(--primary) 12%, var(--surface-high)); }
+.reset-button:active { transform: scale(.96); }
 @media (max-width: 640px) {
   #app { width: calc(100% - 24px); padding: var(--space-5) 0 var(--space-7); }
   .education { grid-template-columns: 1fr; }
   .select-field { flex-direction: column; align-items: stretch; gap: var(--space-3); }
   .select-field select { align-self: flex-start; }
 }
-@media (prefers-reduced-motion: reduce) { *, *::after { transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -28,7 +28,7 @@ export class SnipperApplication {
   ) {}
 
   start(invocationId: string, screenshotUrl: string, settings: Settings = DEFAULT_SETTINGS): void {
-    this.destroy();
+    this.destroy(false);
     this.invocationId = invocationId;
     this.screenshotUrl = screenshotUrl;
     this.settings = settings;
@@ -40,26 +40,34 @@ export class SnipperApplication {
       onSnapshotError: () => this.showDecodeFailure('image-error'),
     }, settings.theme);
     this.gesture = new SelectionGesture(this.view.selectionSurface, {
+      onStart: (selection) => this.view.beginSelection(selection),
       onChange: (selection) => {
         this.view.setKeyboardSelectionActionVisible(true);
         this.keyboardMode = false;
         this.keyboardSelection?.cancel();
         this.view.showSelection(selection);
       },
-      onComplete: (selection) => void this.scan(selection),
+      onComplete: (selection) => {
+        this.view.completeSelection();
+        void this.scan(selection);
+      },
       onInvalid: () => this.rejectSmallSelection(),
     });
     this.keyboardSelection = new KeyboardSelection({
       onChange: (selection) => {
         this.view.showSelection(selection);
+        this.view.settleSelection();
         this.view.announceSelection(selection);
       },
-      onComplete: (selection) => void this.scan(selection),
+      onComplete: (selection) => {
+        this.view.completeSelection();
+        void this.scan(selection);
+      },
     });
     window.addEventListener('keydown', this.onKeyDown, true);
   }
 
-  destroy(): void {
+  destroy(animateDismissal = true): void {
     window.removeEventListener('keydown', this.onKeyDown, true);
     this.decodeController?.abort();
     this.decodeController = null;
@@ -71,7 +79,7 @@ export class SnipperApplication {
     this.keyboardMode = false;
     this.invocationId = '';
     this.screenshotUrl = '';
-    this.view.unmount();
+    this.view.unmount(animateDismissal);
   }
 
   private onSnapshotReady(): void {

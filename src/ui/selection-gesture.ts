@@ -7,6 +7,7 @@ import {
 } from '../core/selection';
 
 export type SelectionGestureCallbacks = Readonly<{
+  onStart?: (selection: SelectionRect) => void;
   onChange: (selection: SelectionRect) => void;
   onComplete: (selection: SelectionRect) => void;
   onInvalid: () => void;
@@ -53,7 +54,9 @@ export class SelectionGesture {
     this.dragStart = this.pointFromEvent(event);
     this.activePointerId = event.pointerId;
     this.surface.setPointerCapture(event.pointerId);
-    this.callbacks.onChange(rectFromPoints(this.dragStart, this.dragStart));
+    const selection = rectFromPoints(this.dragStart, this.dragStart);
+    this.callbacks.onStart?.(selection);
+    this.callbacks.onChange(selection);
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {

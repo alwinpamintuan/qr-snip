@@ -1,12 +1,19 @@
 import { createI18n } from '../../src/i18n/messages';
 import { DEFAULT_SETTINGS, type Settings, type ThemePreference } from '../../src/core/settings';
 import { loadSettings, resetSettings, saveSettings } from '../../src/application/settings-store';
+import { animateElement, animateStagger, installPressMotion, type SpringMotion } from '../../src/ui/motion';
 import './style.css';
 
 const i18n = createI18n(browser.i18n);
 const t = i18n.t;
 const app = document.querySelector<HTMLElement>('#app')!;
 const isOnboarding = new URLSearchParams(location.search).get('onboarding') === '1';
+const themeContinuity: SpringMotion = {
+  from: { y: 3, scale: .997, opacity: .8 },
+  to: { y: 0, scale: 1, opacity: 1 },
+  spring: 'settled',
+  duration: 260,
+};
 
 document.title = t('optionsTitle');
 document.documentElement.dir = i18n.direction;
@@ -61,6 +68,15 @@ resetButton.textContent = t('resetSettingsAction');
 settings.append(themeField, closeAfterCopy.field, decoderDiagnostics.field, privacyNote, resetButton);
 main.append(settings);
 app.replaceChildren(heading, main);
+installPressMotion(resetButton);
+requestAnimationFrame(() => {
+  animateElement(heading, 'entrance');
+  const cards = main.querySelectorAll<HTMLElement>('.education article');
+  animateStagger(cards, 'reveal', 54, { delay: 45 });
+  animateStagger(settings.querySelectorAll<HTMLElement>('.field, .privacy-note, .reset-button'), 'reveal', 38, {
+    delay: cards.length ? 170 : 55,
+  });
+});
 
 let statusTimer: number | undefined;
 void loadSettings(browser.storage.local).then(renderSettings);
@@ -81,6 +97,7 @@ async function persist(): Promise<void> {
     closeAfterCopy: closeAfterCopy.input.checked,
     decoderDiagnostics: decoderDiagnostics.input.checked,
   };
+  applyTheme(value.theme);
   await saveSettings(browser.storage.local, value);
   showStatus(t('settingsSavedStatus'));
 }
@@ -89,13 +106,21 @@ function renderSettings(value: Settings): void {
   theme.value = value.theme;
   closeAfterCopy.input.checked = value.closeAfterCopy;
   decoderDiagnostics.input.checked = value.decoderDiagnostics;
-  document.documentElement.dataset.theme = value.theme;
+  applyTheme(value.theme);
 }
 
 function showStatus(message: string): void {
   status.textContent = message;
+  animateElement(status, 'reveal');
   window.clearTimeout(statusTimer);
   statusTimer = window.setTimeout(() => { status.textContent = ''; }, 2200);
+}
+
+function applyTheme(value: ThemePreference): void {
+  const changed = document.documentElement.dataset.theme !== undefined
+    && document.documentElement.dataset.theme !== value;
+  document.documentElement.dataset.theme = value;
+  if (changed) animateElement(app, themeContinuity);
 }
 
 function createEducation(): HTMLElement {

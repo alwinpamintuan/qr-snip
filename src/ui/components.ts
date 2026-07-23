@@ -1,4 +1,5 @@
 import { createIcon, type IconName } from './icons';
+import { installPressMotion } from './motion';
 
 export type ButtonKind = 'filled' | 'tonal' | 'text';
 
@@ -9,6 +10,7 @@ export function createIconButton(label: string, icon: IconName, action: string):
   button.dataset.action = action;
   button.setAttribute('aria-label', label);
   button.append(createIcon(icon));
+  installPressMotion(button);
   return button;
 }
 
@@ -26,6 +28,7 @@ export function createActionButton(
   text.textContent = label;
   button.append(text);
   button.addEventListener('click', onSelect);
+  installPressMotion(button);
   return button;
 }
 

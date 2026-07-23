@@ -4,6 +4,37 @@ import { createActionButton as createButtonPrimitive, createIconButton, createSt
 import { createIcon, type IconName } from './icons';
 import { SNIPPER_STYLES } from './snipper-styles';
 import type { ThemePreference } from '../core/settings';
+import {
+  animateElement,
+  animateStagger,
+  cancelMotion,
+  type SpringMotion,
+} from './motion';
+
+const selectionFeedback: SpringMotion = {
+  from: { scale: .9, opacity: .72 },
+  to: { scale: 1, opacity: 1 },
+  spring: 'firm',
+  duration: 300,
+};
+const selectionSettle: SpringMotion = {
+  from: { scale: .985, opacity: 1 },
+  to: { scale: 1, opacity: 1 },
+  spring: 'settled',
+  duration: 240,
+};
+const resultEntrance: SpringMotion = {
+  from: { y: 30, scale: .84, opacity: 0 },
+  to: { y: 0, scale: 1, opacity: 1 },
+  spring: 'expressive',
+  duration: 480,
+};
+const warningResponse: SpringMotion = {
+  from: { x: -7, scale: .9, rotate: -5, opacity: .55 },
+  to: { x: 0, scale: 1, rotate: 0, opacity: 1 },
+  spring: 'firm',
+  duration: 380,
+};
 
 let sharedStyleSheet: CSSStyleSheet | null | undefined;
 let sharedLayoutTemplate: HTMLTemplateElement | undefined;
@@ -51,6 +82,7 @@ export class SnipperView {
   private toast: HTMLElement | null = null;
   private toastTimer: number | null = null;
   private announcementTimer: number | null = null;
+  private selectionSettleTimer: number | null = null;
   private returnFocus: HTMLElement | null = null;
 
   constructor(
@@ -103,10 +135,26 @@ export class SnipperView {
     this.root.querySelector('[data-action="close"]')?.addEventListener('click', callbacks.onClose);
     this.root.querySelector('[data-action="keyboard"]')?.addEventListener('click', callbacks.onKeyboardSelection);
     this.resultCard?.addEventListener('keydown', this.onResultKeyDown);
+    const topBar = this.root.querySelector<HTMLElement>('.top-bar');
+    const brand = this.root.querySelector<HTMLElement>('.brand-mark');
+    if (topBar) animateElement(topBar, 'entrance', { prefix: 'translateX(-50%)' });
+    if (brand) animateElement(brand, 'reveal', { delay: 70 });
+  }
+
+  beginSelection(rect: SelectionRect): void {
+    this.showSelection(rect);
+    if (this.selection) animateElement(this.selection, selectionFeedback);
   }
 
   showSelection(rect: SelectionRect): void {
     if (!this.selection) return;
+    const wasVisible = this.selection.classList.contains('visible')
+      && this.selection.getAttribute('aria-hidden') !== 'true';
+    if (!wasVisible) {
+      cancelMotion(this.selection);
+      this.selection.style.removeProperty('opacity');
+      this.selection.style.removeProperty('transform');
+    }
     Object.assign(this.selection.style, {
       left: `${rect.x}px`,
       top: `${rect.y}px`,
@@ -117,18 +165,33 @@ export class SnipperView {
     this.selection.classList.add('visible');
     this.selection.setAttribute('aria-hidden', 'false');
     if (this.selectionLabel) this.selectionLabel.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+    if (!wasVisible) animateElement(this.selection, 'entrance');
+  }
+
+  settleSelection(): void {
+    if (this.selectionSettleTimer !== null) window.clearTimeout(this.selectionSettleTimer);
+    this.selectionSettleTimer = window.setTimeout(() => {
+      this.selectionSettleTimer = null;
+      if (this.selection?.classList.contains('visible')) animateElement(this.selection, selectionSettle);
+    }, 120);
+  }
+
+  completeSelection(): void {
+    if (this.selectionSettleTimer !== null) window.clearTimeout(this.selectionSettleTimer);
+    this.selectionSettleTimer = null;
+    if (this.selection) animateElement(this.selection, selectionFeedback);
   }
 
   resetSelection(): void {
-    this.selection?.classList.remove('visible');
-    this.selection?.setAttribute('aria-hidden', 'true');
-    this.resultCard?.classList.remove('visible');
+    this.hideAnimated(this.selection);
+    this.hideAnimated(this.resultCard, 'translate(-50%, -50%)');
     this.returnFocus?.focus();
     this.returnFocus = null;
   }
 
   showResult(presentation: ResultPresentation): void {
     if (!this.resultCard) return;
+    this.hideAnimated(this.selection);
     this.resultCard.querySelector('.result-title')!.textContent = presentation.title;
     this.resultCard.querySelector('.result-subtitle')!.textContent = presentation.subtitle;
     this.showResultContent(presentation);
@@ -157,13 +220,22 @@ export class SnipperView {
     }
 
     const status = this.resultCard.querySelector('.status-icon')!;
-    status.replaceWith(createStatusIcon(presentation.isWarning ? 'warning' : 'check', presentation.isWarning));
+    const nextStatus = createStatusIcon(presentation.isWarning ? 'warning' : 'check', presentation.isWarning);
+    status.replaceWith(nextStatus);
     this.resultCard.classList.toggle('warning', presentation.isWarning);
 
     const actions = this.resultCard.querySelector('.result-actions')!;
     actions.replaceChildren(...presentation.actions.map((action) => this.createActionButton(action)));
     this.returnFocus = this.root?.activeElement instanceof HTMLElement ? this.root.activeElement : null;
     this.resultCard.classList.add('visible');
+    this.resultCard.setAttribute('aria-hidden', 'false');
+    animateElement(this.resultCard, resultEntrance, { prefix: 'translate(-50%, -50%)' });
+    animateElement(nextStatus, presentation.isWarning ? warningResponse : 'press', { delay: 80 });
+    animateStagger(this.resultContent(), 'reveal', 52, { delay: 55 });
+    if (presentation.isWarning) {
+      const riskPanel = this.resultCard.querySelector<HTMLElement>('.risk-panel');
+      if (riskPanel && !riskPanel.closest('[hidden]')) animateElement(riskPanel, warningResponse, { delay: 150 });
+    }
     this.resultCard.querySelector<HTMLButtonElement>('button')?.focus();
     this.setInstruction(presentation.title, presentation.subtitle);
   }
@@ -173,17 +245,16 @@ export class SnipperView {
     if (!instruction) return;
     instruction.querySelector('strong')!.textContent = title;
     instruction.querySelector('span')!.textContent = subtitle;
-    instruction.classList.remove('changed');
-    void (instruction as HTMLElement).offsetWidth;
-    instruction.classList.add('changed');
+    animateElement(instruction as HTMLElement, 'reveal');
   }
 
   showToast(message: string): void {
     if (!this.toast) return;
     this.toast.textContent = message;
     this.toast.classList.add('visible');
+    animateElement(this.toast, 'reveal', { prefix: 'translateX(-50%)' });
     if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
-    this.toastTimer = window.setTimeout(() => this.toast?.classList.remove('visible'), 1800);
+    this.toastTimer = window.setTimeout(() => this.hideAnimated(this.toast, 'translateX(-50%)'), 1800);
   }
 
   enableKeyboardSelection(): void {
@@ -229,11 +300,20 @@ export class SnipperView {
     return copied;
   }
 
-  unmount(): void {
+  unmount(animateDismissal = false): void {
     if (this.toastTimer !== null) window.clearTimeout(this.toastTimer);
     if (this.announcementTimer !== null) window.clearTimeout(this.announcementTimer);
+    if (this.selectionSettleTimer !== null) window.clearTimeout(this.selectionSettleTimer);
     this.resultCard?.removeEventListener('keydown', this.onResultKeyDown);
-    this.host?.remove();
+    const host = this.host;
+    if (host && animateDismissal) {
+      host.style.pointerEvents = 'none';
+      const dismissal = animateElement(host, 'exit');
+      if (dismissal) void dismissal.finished.then(() => host.remove(), () => undefined);
+      else host.remove();
+    } else {
+      host?.remove();
+    }
     this.host = null;
     this.root = null;
     this.screenshot = null;
@@ -242,6 +322,34 @@ export class SnipperView {
     this.resultCard = null;
     this.toast = null;
     this.returnFocus = null;
+  }
+
+  private resultContent(): HTMLElement[] {
+    if (!this.resultCard) return [];
+    return [
+      this.resultCard.querySelector<HTMLElement>('.result-heading'),
+      this.resultCard.querySelector<HTMLElement>('.hostname-row:not([hidden])'),
+      this.resultCard.querySelector<HTMLElement>('.result-summary:not([hidden])'),
+      this.resultCard.querySelector<HTMLElement>('.result-value:not([hidden])'),
+      this.resultCard.querySelector<HTMLElement>('.security-review:not([hidden])'),
+      this.resultCard.querySelector<HTMLElement>('.result-actions'),
+    ].filter((element): element is HTMLElement => Boolean(element));
+  }
+
+  private hideAnimated(element: HTMLElement | null, prefix = ''): void {
+    if (!element?.classList.contains('visible')) return;
+    element.setAttribute('aria-hidden', 'true');
+    const animation = animateElement(element, 'exit', { prefix });
+    if (!animation) {
+      element.classList.remove('visible');
+      return;
+    }
+    void animation.finished.then(() => {
+      element.classList.remove('visible');
+      cancelMotion(element);
+      element.style.removeProperty('opacity');
+      element.style.removeProperty('transform');
+    }, () => undefined);
   }
 
   private installStyles(): void {

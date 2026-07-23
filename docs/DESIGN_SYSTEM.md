@@ -24,10 +24,29 @@ Contrast values use WCAG 2 relative luminance. Text and icons use role pairs at 
 ## Expressive rules
 
 - Shape contrast identifies hierarchy: circular icon actions, asymmetric status containers, pill guidance, and a large asymmetric result surface.
-- Motion uses short emphasized easing for state changes and is eliminated by `prefers-reduced-motion`.
+- Motion uses short, bounded springs for state changes and is eliminated by `prefers-reduced-motion`.
 - Every actionable target is at least 44 by 44 CSS pixels and has a three-pixel focus indicator.
 - Warning colors communicate caution only alongside an icon, heading, and explanatory text.
 - The system font stack avoids remote font requests and preserves the local-only runtime model.
+
+## Motion hierarchy
+
+Motion follows the interaction hierarchy rather than decorating every update:
+
+1. **Functional state transitions** use a short spring entrance or exit for the overlay, result surface, retry, toast, and dismissal. The result contents reveal in a small stagger so the heading and primary action remain easy to locate.
+2. **Interaction feedback** uses a firmer spring for button presses, selection start/completion, toggle-thumb changes, saved/reset status, and warning icons. Pointer-drag and keyboard selection geometry is written directly every frame; transforms never interpolate the crop coordinates.
+3. **Ambient progress** is limited to the active scan. A low-opacity outline pulse and narrow moving highlight sit around or lightly over the selection without masking the QR modules.
+
+The typed presets and spring sampler live in `src/ui/motion.ts`; timing and spring characteristics are centralized with the other design tokens in `src/ui/theme-tokens.ts`. A new animation replaces any motion already owned by that element.
+
+When `prefers-reduced-motion: reduce` matches, Web Animations immediately apply their final keyframe and CSS ambient effects run for no meaningful duration or repetition. Focus changes, live-region announcements, and control state changes are always synchronous in both modes.
+
+Performance limits:
+
+- Persistent effects are allowed only while decoding and stop when busy state ends.
+- Direct-manipulation coordinates are never animated.
+- Runtime motion is restricted to compositor-friendly `transform` and `opacity`; color, border, and theme continuity remain short CSS transitions.
+- Staggers stay below 55 ms per item, overshoot is bounded by the selected spring token, and settling completes within 480 ms.
 
 ## Visual gallery
 

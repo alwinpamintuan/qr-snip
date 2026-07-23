@@ -9,6 +9,7 @@ type TypeRole = 'font-family' | 'title-size' | 'body-size' | 'label-size' | 'cap
 type ShapeRole = 'pill' | 'button' | 'card' | 'card-accent' | 'medium' | 'small';
 type ElevationRole = 'floating' | 'dialog' | 'raised' | 'selected';
 type MotionRole = 'standard' | 'emphasized' | 'decelerate' | 'fast' | 'medium' | 'slow';
+export type MotionSpringName = 'expressive' | 'settled' | 'firm';
 
 export type DesignTokenSet = Readonly<{
   colors: TokenGroup<ColorRole>;
@@ -49,6 +50,17 @@ const shared = {
     slow: '480ms',
   },
 } satisfies Omit<DesignTokenSet, 'colors'>;
+
+export const MOTION_SPRINGS = {
+  expressive: { stiffness: 225, damping: 17, mass: 1, maxOvershoot: .08 },
+  settled: { stiffness: 240, damping: 24, mass: 1, maxOvershoot: .035 },
+  firm: { stiffness: 320, damping: 22, mass: .9, maxOvershoot: .05 },
+} as const satisfies Readonly<Record<MotionSpringName, Readonly<{
+  stiffness: number;
+  damping: number;
+  mass: number;
+  maxOvershoot: number;
+}>>>;
 
 export const LIGHT_TOKENS: DesignTokenSet = {
   colors: {
