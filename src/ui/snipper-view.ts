@@ -8,6 +8,7 @@ import {
   animateElement,
   animateStagger,
   cancelMotion,
+  installPressMotion,
   type SpringMotion,
 } from './motion';
 
@@ -61,8 +62,20 @@ export type ResultPresentation = Readonly<{
   hostname?: Readonly<{ ascii: string; unicode: string }>;
   isWarning: boolean;
   diagnostics?: string;
-  summary?: readonly Readonly<{ label: string; value: string }>[];
+  summary?: readonly SummaryFieldPresentation[];
   actions: readonly ResultAction[];
+}>;
+
+export type SummaryFieldPresentation = Readonly<{
+  label: string;
+  value: string;
+  sensitive?: Readonly<{
+    hiddenLabel: string;
+    revealLabel: string;
+    hideLabel: string;
+    copyLabel: string;
+    onCopy: () => void;
+  }>;
 }>;
 
 export type SnipperViewCallbacks = Readonly<{
@@ -197,15 +210,7 @@ export class SnipperView {
     this.showResultContent(presentation);
     const summary = this.resultCard.querySelector<HTMLElement>('.result-summary')!;
     summary.hidden = !presentation.summary?.length;
-    summary.replaceChildren(...(presentation.summary ?? []).map((field) => {
-      const row = document.createElement('div');
-      const label = document.createElement('dt');
-      const value = document.createElement('dd');
-      label.textContent = field.label;
-      value.textContent = field.value;
-      row.append(label, value);
-      return row;
-    }));
+    summary.replaceChildren(...(presentation.summary ?? []).map((field) => this.createSummaryRow(field)));
     const diagnostics = this.resultCard.querySelector<HTMLElement>('.decoder-diagnostics')!;
     diagnostics.hidden = !presentation.diagnostics;
     diagnostics.textContent = presentation.diagnostics ?? '';
@@ -459,6 +464,52 @@ export class SnipperView {
 
   private createActionButton(action: ResultAction): HTMLButtonElement {
     return createButtonPrimitive(action.label, action.filled ? 'filled' : 'text', action.onSelect, action.icon);
+  }
+
+  private createSummaryRow(field: SummaryFieldPresentation): HTMLElement {
+    const row = document.createElement('div');
+    const label = document.createElement('dt');
+    const value = document.createElement('dd');
+    label.textContent = field.label;
+    if (!field.sensitive) {
+      value.textContent = field.value;
+      row.append(label, value);
+      return row;
+    }
+
+    value.className = 'secret-field';
+    const secret = document.createElement('code');
+    secret.className = 'secret-value';
+    secret.textContent = '••••••••••';
+    secret.setAttribute('aria-label', field.sensitive.hiddenLabel);
+
+    const reveal = this.createSecretButton(field.sensitive.revealLabel, 'visibility', () => {
+      const revealed = reveal.getAttribute('aria-pressed') === 'true';
+      const nextRevealed = !revealed;
+      secret.textContent = nextRevealed ? field.value : '••••••••••';
+      secret.setAttribute('aria-label', nextRevealed ? field.value : field.sensitive!.hiddenLabel);
+      reveal.setAttribute('aria-pressed', String(nextRevealed));
+      reveal.setAttribute('aria-label', nextRevealed ? field.sensitive!.hideLabel : field.sensitive!.revealLabel);
+      reveal.title = nextRevealed ? field.sensitive!.hideLabel : field.sensitive!.revealLabel;
+      reveal.replaceChildren(createIcon(nextRevealed ? 'visibilityOff' : 'visibility'));
+    });
+    reveal.setAttribute('aria-pressed', 'false');
+    const copy = this.createSecretButton(field.sensitive.copyLabel, 'copy', field.sensitive.onCopy);
+    value.append(secret, reveal, copy);
+    row.append(label, value);
+    return row;
+  }
+
+  private createSecretButton(label: string, icon: IconName, onSelect: () => void): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'secret-action';
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.append(createIcon(icon));
+    button.addEventListener('click', onSelect);
+    installPressMotion(button);
+    return button;
   }
 
   private showResultContent(presentation: ResultPresentation): void {

@@ -9,7 +9,11 @@ export const wifiInterpreter: ResultInterpreter = {
       { label: 'networkName', value: wifi.name },
       { label: 'security', value: wifi.security || 'nopass' },
       { label: 'hiddenNetwork', value: wifi.hidden },
-      { label: 'credentials', value: wifi.hasCredentials },
+      {
+        label: 'credentials',
+        value: wifi.password || false,
+        ...(wifi.password ? { sensitive: true } : {}),
+      },
     ];
     return { value: payload, kind: 'wifi', fields };
   },
@@ -33,11 +37,19 @@ export const geoInterpreter: ResultInterpreter = {
   present: (payload) => ({ value: payload, kind: 'geo', fields: parseGeo(payload)! }),
 };
 
+export function maskWifiPassword(payload: string): string {
+  return payload.replace(
+    /(WIFI:|;)(P:)((?:\\.|[^;])*)/iu,
+    (_match, prefix: string, key: string, password: string) =>
+      `${prefix}${key}${password ? '••••••••••' : ''}`,
+  );
+}
+
 function parseWifi(payload: string): Readonly<{
   name: string;
   security: string;
   hidden: boolean;
-  hasCredentials: boolean;
+  password: string;
 }> | null {
   if (!payload.toUpperCase().startsWith('WIFI:') || !payload.endsWith(';;')) return null;
   const fields = parseEscapedFields(payload.slice(5, -2));
@@ -49,7 +61,7 @@ function parseWifi(payload: string): Readonly<{
     name,
     security: fields.get('T') ?? '',
     hidden: hidden === 'true',
-    hasCredentials: Boolean(fields.get('P')),
+    password: fields.get('P') ?? '',
   };
 }
 

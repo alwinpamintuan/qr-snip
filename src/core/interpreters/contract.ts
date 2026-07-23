@@ -9,6 +9,7 @@ export type ResultFieldLabel =
 export type ResultField = Readonly<{
   label: ResultFieldLabel;
   value: string | boolean;
+  sensitive?: boolean;
 }>;
 
 export type InterpretedResult = Readonly<{

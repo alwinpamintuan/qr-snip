@@ -36,7 +36,7 @@ Only these protocols can be handed to the browser:
 - `mailto:`
 - `tel:`
 
-`javascript:`, `data:`, `file:`, browser-internal schemes, extension schemes, and malformed values remain plain text. The allow list is enforced independently in result interpretation and again in the background message handler. Structured Wi-Fi, vCard, calendar, and geo interpreters are pure transformations: they add read-only text summaries but never connect, import, download, or navigate.
+`javascript:`, `data:`, `file:`, browser-internal schemes, extension schemes, and malformed values remain plain text. The allow list is enforced independently in result interpretation and again in the background message handler. Structured Wi-Fi, vCard, calendar, and geo interpreters are pure transformations: they add local summaries but never connect, import, download, or navigate. Wi-Fi passwords remain masked until an explicit reveal action and can be copied independently without storage or network access.
 
 ### Suspicious-link confirmation
 

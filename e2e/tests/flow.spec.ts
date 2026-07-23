@@ -90,7 +90,16 @@ test('structured payloads show inactive summaries and preserve copy-only handlin
   await expect(page.getByRole('dialog').getByText('Wi-Fi network · preview only', { exact: true })).toBeVisible();
   await expect(page.getByText('Guest network', { exact: true })).toBeVisible();
   await expect(page.getByText('WPA', { exact: true })).toBeVisible();
-  await expect(page.getByText('Included', { exact: true })).toBeVisible();
+  await expect(page.locator('.result-value')).not.toContainText('local-secret');
+  await expect(page.locator('.result-value')).toContainText('••••••••••');
+  await expect(page.locator('.secret-value')).toHaveText('••••••••••');
+  const revealPassword = page.getByRole('button', { name: 'Reveal password' });
+  await expect(revealPassword).toBeVisible();
+  await revealPassword.click();
+  await expect(page.locator('.secret-value')).toHaveText('local-secret');
+  await expect(page.getByRole('button', { name: 'Hide password' })).toBeVisible();
+  await page.getByRole('button', { name: 'Copy password' }).click();
+  await expect(page.locator('.toast')).toContainText(/Copied to clipboard|Copy failed/);
   await expect(page.getByRole('button', { name: 'Copy' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open link' })).toHaveCount(0);

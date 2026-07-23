@@ -54,6 +54,49 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   .result-summary > div:last-child dd { border-bottom: 0; }
   .result-summary:not([hidden]) + .result-value { margin-top: 12px; }
 
+  .result-summary .secret-field {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 4px;
+    padding-block: 6px;
+  }
+
+  .secret-value {
+    flex: 1 1 72px;
+    min-width: 0;
+    overflow: hidden;
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .secret-action {
+    display: grid;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    place-items: center;
+    color: var(--qr-primary);
+    background: transparent;
+    border: 0;
+    border-radius: var(--qr-shapes-button);
+    cursor: pointer;
+    transition:
+      background-color var(--qr-motion-fast) var(--qr-motion-standard),
+      transform var(--qr-motion-fast) var(--qr-motion-emphasized);
+  }
+
+  .secret-action:hover {
+    background: color-mix(in srgb, var(--qr-primary) 10%, transparent);
+  }
+
+  .secret-action:active { transform: scale(.92); }
+
   .qr-snip-app {
     position: fixed;
     inset: 0;
@@ -121,6 +164,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   .brand-mark svg,
   .icon-button svg,
   .action-button svg,
+  .secret-action svg,
   .status-icon svg {
     width: 20px;
     height: 20px;
@@ -180,6 +224,7 @@ export const SNIPPER_STYLES = `${THEME_TOKEN_STYLES}${String.raw`
   }
 
   .icon-button:focus-visible,
+  .secret-action:focus-visible,
   .action-button:focus-visible {
     outline: 3px solid color-mix(in srgb, var(--qr-primary) 48%, transparent);
     outline-offset: 2px;

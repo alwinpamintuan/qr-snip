@@ -29,7 +29,8 @@ export const MESSAGE_KEYS = [
   'fieldNetworkName', 'fieldSecurity', 'fieldHiddenNetwork', 'fieldCredentials', 'fieldName',
   'fieldOrganization', 'fieldEmail', 'fieldPhone', 'fieldEvent', 'fieldStarts', 'fieldEnds',
   'fieldLocation', 'fieldLatitude', 'fieldLongitude', 'fieldAltitude', 'fieldPlace',
-  'fieldValueYes', 'fieldValueNo', 'fieldValueIncluded',
+  'fieldValueYes', 'fieldValueNo', 'passwordHiddenValue', 'revealPasswordAction',
+  'hidePasswordAction', 'copyPasswordAction',
 ] as const;
 
 export type MessageKey = typeof MESSAGE_KEYS[number];

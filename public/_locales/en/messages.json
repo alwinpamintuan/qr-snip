@@ -148,5 +148,8 @@
   "fieldPlace": { "message": "Place" },
   "fieldValueYes": { "message": "Yes" },
   "fieldValueNo": { "message": "No" },
-  "fieldValueIncluded": { "message": "Included" }
+  "passwordHiddenValue": { "message": "Password hidden" },
+  "revealPasswordAction": { "message": "Reveal password" },
+  "hidePasswordAction": { "message": "Hide password" },
+  "copyPasswordAction": { "message": "Copy password" }
 }

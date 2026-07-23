@@ -47,7 +47,7 @@ The repository currently provides reproducible automated evidence for:
 - static image, canvas, paused-video poster, transformed element, hostile CSS, and DOM-mutation fixture surfaces; and
 - light, dark, increased-contrast, narrow, and 200% text component-gallery screenshots generated only from synthetic content;
 - versioned settings migration, first-install-only education, and preference persistence;
-- pure ordered result interpreters with inactive Wi-Fi, vCard, calendar, and geo summaries;
+- pure ordered result interpreters with structured Wi-Fi, vCard, calendar, and geo summaries plus masked Wi-Fi password controls;
 - deterministic ZIP generation, store-archive development-file rejection, SBOM/provenance generation, and checksum verification.
 
 The following release evidence still requires a real browser and representative hardware:

@@ -103,7 +103,7 @@ On pointer release, the instruction changes to “Scanning selection…” and s
 
 ### State E — result preview
 
-A morphing result card shows the payload type and exact decoded value. Wi-Fi, vCard, calendar, and geo payloads also show an inactive summary. Copy is always available. Open is available only for valid allow-listed protocols. “Scan another” returns to selection on the same frozen frame.
+A morphing result card shows the payload type and decoded value. Wi-Fi, vCard, calendar, and geo payloads also show a structured summary. Wi-Fi passwords are masked in both the payload preview and summary by default, with explicit reveal/hide and password-only copy controls. Copy of the exact unmodified payload is always available. Open is available only for valid allow-listed protocols. “Scan another” returns to selection on the same frozen frame.
 
 HTTP(S) results show the parsed hostname. If warning signals exist, the first result preview also shows the scanned value, normalized destination when different, each warning in a readable list, a cautionary disclaimer, and an explicit **Open anyway** action.
 

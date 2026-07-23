@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { interpretResult, RESULT_INTERPRETERS } from '../src/core/interpreters/registry';
-import { calendarInterpreter, geoInterpreter, vcardInterpreter, wifiInterpreter } from '../src/core/interpreters/structured';
+import {
+  calendarInterpreter,
+  geoInterpreter,
+  maskWifiPassword,
+  vcardInterpreter,
+  wifiInterpreter,
+} from '../src/core/interpreters/structured';
 
 describe('result interpreter registry', () => {
   it('uses an explicit priority and keeps text as the final fallback', () => {
@@ -9,7 +15,7 @@ describe('result interpreter registry', () => {
     ]);
   });
 
-  it('presents Wi-Fi details without creating an action or exposing the password', () => {
+  it('presents a Wi-Fi password as a sensitive field without creating an open action', () => {
     const payload = String.raw`WIFI:T:WPA;S:Cafe\; Guest;P:sup3rsecret;H:true;;`;
     const result = interpretResult(payload);
     expect(wifiInterpreter.matches(payload)).toBe(true);
@@ -19,11 +25,21 @@ describe('result interpreter registry', () => {
         { label: 'networkName', value: 'Cafe; Guest' },
         { label: 'security', value: 'WPA' },
         { label: 'hiddenNetwork', value: true },
-        { label: 'credentials', value: true },
+        { label: 'credentials', value: 'sup3rsecret', sensitive: true },
       ],
     });
     expect(result).not.toHaveProperty('openUrl');
-    expect(JSON.stringify(result.fields)).not.toContain('sup3rsecret');
+  });
+
+  it('parses escaped Wi-Fi password characters exactly', () => {
+    const payload = String.raw`WIFI:T:WPA;S:Guest;P:semi\;colon\\slash;;`;
+    const result = interpretResult(payload);
+    expect(result.fields).toContainEqual({
+      label: 'credentials',
+      value: 'semi;colon\\slash',
+      sensitive: true,
+    });
+    expect(maskWifiPassword(payload)).toBe(String.raw`WIFI:T:WPA;S:Guest;P:••••••••••;;`);
   });
 
   it('summarizes a vCard as an inactive contact preview', () => {

@@ -1,6 +1,7 @@
 import { WorkerQrDecoder, type DecodeOutcome, type QrDecoder } from '../core/decode';
 import { displayPayload } from '../core/result';
 import { interpretResult } from '../core/interpreters/registry';
+import { maskWifiPassword } from '../core/interpreters/structured';
 import type { InterpretedResult, ResultField, ResultFieldLabel, ResultKind } from '../core/interpreters/contract';
 import { toPixelCrop, type SelectionRect } from '../core/selection';
 import type { MessageKey, Translator } from '../i18n/messages';
@@ -8,7 +9,7 @@ import { assessLinkSecurity, type LinkRisk, type LinkSecurityAssessment } from '
 import { toUnicode } from 'punycode';
 import { KeyboardSelection } from '../ui/keyboard-selection';
 import { SelectionGesture } from '../ui/selection-gesture';
-import { SnipperView } from '../ui/snipper-view';
+import { SnipperView, type SummaryFieldPresentation } from '../ui/snipper-view';
 import { DEFAULT_SETTINGS, type Settings } from '../core/settings';
 
 export class SnipperApplication {
@@ -121,7 +122,9 @@ export class SnipperApplication {
     const linkSecurity = result.kind === 'url' && result.openUrl
       ? assessLinkSecurity(result.openUrl, toUnicode)
       : undefined;
-    const displayed = this.displayPayload(result.value);
+    const displayed = this.displayPayload(
+      result.kind === 'wifi' ? maskWifiPassword(result.value) : result.value,
+    );
 
     if (result.openUrl && linkSecurity?.requiresConfirmation) {
       this.previewSuspiciousLink(result, linkSecurity);
@@ -266,7 +269,7 @@ export class SnipperApplication {
     return this.t(key[kind]);
   }
 
-  private presentField(field: ResultField): Readonly<{ label: string; value: string }> {
+  private presentField(field: ResultField): SummaryFieldPresentation {
     const keys: Record<ResultFieldLabel, MessageKey> = {
       networkName: 'fieldNetworkName', security: 'fieldSecurity', hiddenNetwork: 'fieldHiddenNetwork',
       credentials: 'fieldCredentials', name: 'fieldName', organization: 'fieldOrganization',
@@ -274,11 +277,23 @@ export class SnipperApplication {
       location: 'fieldLocation', latitude: 'fieldLatitude', longitude: 'fieldLongitude',
       altitude: 'fieldAltitude', place: 'fieldPlace',
     };
+    const label = this.t(keys[field.label]);
+    if (field.sensitive && typeof field.value === 'string') {
+      return {
+        label,
+        value: field.value,
+        sensitive: {
+          hiddenLabel: this.t('passwordHiddenValue'),
+          revealLabel: this.t('revealPasswordAction'),
+          hideLabel: this.t('hidePasswordAction'),
+          copyLabel: this.t('copyPasswordAction'),
+          onCopy: () => void this.copyValue(field.value as string),
+        },
+      };
+    }
     return {
-      label: this.t(keys[field.label]),
-      value: field.label === 'credentials'
-        ? this.t(field.value ? 'fieldValueIncluded' : 'fieldValueNo')
-        : typeof field.value === 'boolean'
+      label,
+      value: typeof field.value === 'boolean'
         ? this.t(field.value ? 'fieldValueYes' : 'fieldValueNo')
         : field.value,
     };
