@@ -4,6 +4,8 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-24
+
 ### Added
 
 - Keyboard-controlled selection with accelerated movement, resizing, live geometry announcements, and dialog focus containment
@@ -13,6 +15,8 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - First-run privacy education and an extension-owned settings page with versioned theme, close-after-copy, and local decoder-diagnostics preferences
 - Ordered result interpreters with inactive Wi-Fi, vCard, calendar, and geo summaries plus exact-text fallback for malformed payloads
 - Deterministic Chromium/Firefox packaging, archive inspection, bundle budgets, CycloneDX SBOM, checksums, provenance attestations, and protected per-store submission jobs
+- Typed, dependency-free spring motion presets with animation replacement and reduced-motion handling across scanning, onboarding, and preferences
+- Masked Wi-Fi password previews with explicit reveal, hide, and password-only copy controls
 
 ### Changed
 
@@ -21,6 +25,13 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Prioritized drag selection with a compact keyboard alternative, contextual shortcut keycap, and lighter entrance effects
 - Split the fast `pnpm check` development loop from the comprehensive `pnpm check:full` browser and packaging gate
 - Normalized Preferences spacing and typography while reducing control and onboarding-card geometry
+- Kept pointer selection geometry frame-direct while adding coordinated selection, scanning, result, warning, retry, toast, and dismissal feedback
+- Upgraded onboarding cards, preference controls, status feedback, theme continuity, and toggle motion
+
+### Security
+
+- Wi-Fi credentials stay masked in both the structured summary and payload preview until explicitly revealed
+- Password-only copy retains the local-only, in-memory workflow and leaves the exact decoded payload unchanged
 
 ## [0.1.0] - 2026-07-22
 
@@ -45,5 +56,6 @@ Notable changes to QR Snip are documented here. The project follows [Semantic Ve
 - Screenshots and payloads remain in memory and are not uploaded or persisted
 - Generated manifests are checked for least-privilege permissions and exposed runtime surfaces
 
-[Unreleased]: https://github.com/alwinpamintuan/qr-snip/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/alwinpamintuan/qr-snip/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/alwinpamintuan/qr-snip/releases/tag/v0.2.0
 [0.1.0]: https://github.com/alwinpamintuan/qr-snip/releases/tag/v0.1.0
